@@ -5,7 +5,6 @@
 package frc.robot.subsystems;
 
 //import com.kauailabs.navx.frc.AHRS;
-import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -106,9 +105,14 @@ public class SwerveDriveTest extends SubsystemBase {
       return odometer.getPoseMeters();
   }
 
-  //public void resetOdometry(Pose2d pose) {
-  //    odometer.resetPosition(pose, getRotation2d());
-  //}
+  public void resetOdometry(Pose2d pose) {
+      odometer.resetPosition(getGyroAngle(), new SwerveModulePosition[] {
+        frontLeft.getPosition(),
+        frontRight.getPosition(),
+        backLeft.getPosition(),
+        backRight.getPosition()
+      }, pose);
+  }
 
   @Override
   public void periodic() {
