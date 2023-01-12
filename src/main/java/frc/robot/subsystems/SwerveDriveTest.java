@@ -56,13 +56,13 @@ public class SwerveDriveTest extends SubsystemBase {
 
     //private final AHRS gyro = new AHRS(SPI.Port.kMXP);    
 
-    private final Translation2d m_frontLeftLocation = new Translation2d(DriveConstants.kWheelBase / 2, -DriveConstants.kTrackWidth / 2);
-    private final Translation2d m_frontRightLocation = new Translation2d(DriveConstants.kWheelBase / 2, DriveConstants.kTrackWidth / 2);
-    private final Translation2d m_backLeftLocation = new Translation2d(-DriveConstants.kWheelBase / 2, -DriveConstants.kTrackWidth / 2);
-    private final Translation2d m_backRightLocation = new Translation2d(-DriveConstants.kWheelBase / 2, DriveConstants.kTrackWidth / 2);
+    private final Translation2d frontLeftLocation = new Translation2d(DriveConstants.kWheelBase / 2, -DriveConstants.kTrackWidth / 2);
+    private final Translation2d frontRightLocation = new Translation2d(DriveConstants.kWheelBase / 2, DriveConstants.kTrackWidth / 2);
+    private final Translation2d backLeftLocation = new Translation2d(-DriveConstants.kWheelBase / 2, -DriveConstants.kTrackWidth / 2);
+    private final Translation2d backRightLocation = new Translation2d(-DriveConstants.kWheelBase / 2, DriveConstants.kTrackWidth / 2);
     
     public final SwerveDriveKinematics kDriveKinematics = new SwerveDriveKinematics(
-        m_frontLeftLocation, m_frontRightLocation, m_backLeftLocation, m_backRightLocation
+        frontLeftLocation, frontRightLocation, backLeftLocation, backRightLocation
     );
 
     public final SwerveDriveOdometry odometer = new SwerveDriveOdometry(
