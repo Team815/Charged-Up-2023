@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.Autos;
 import frc.robot.commands.ExampleCommand;
@@ -57,6 +58,15 @@ public class RobotContainer {
     // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
     // cancelling on release.
     m_driverController.b().whileTrue(m_exampleSubsystem.exampleMethodCommand());
+
+    swerveDrive.setDefaultCommand(
+            new RunCommand(() -> {
+              swerveDrive.drive(
+                      m_driverController.getLeftX(),
+                      m_driverController.getLeftY(),
+                      m_driverController.getRightX());
+            },
+            swerveDrive));
   }
 
   /**

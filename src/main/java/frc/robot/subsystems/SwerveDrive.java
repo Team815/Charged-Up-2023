@@ -27,4 +27,8 @@ public class SwerveDrive extends SubsystemBase {
   public void periodic() {
     // This method will be called once per scheduler run
   }
+
+  public void drive(double speedX, double speedY, double rotation) {
+      System.out.println("Speed X: " + speedX + " Speed Y: " + speedY + " Rotation Speed: " + rotation);
+  }
 }
