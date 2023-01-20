@@ -7,10 +7,11 @@ package frc.robot.subsystems;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class SwerveDrive extends SubsystemBase {
-  private SwerveModule moduleFrontLeft;
-  private SwerveModule moduleFrontRight;
-  private SwerveModule moduleBackLeft;
-  private SwerveModule moduleBackRight;
+  private final SwerveModule moduleFrontLeft;
+  private final SwerveModule moduleFrontRight;
+  private final SwerveModule moduleBackLeft;
+  private final SwerveModule moduleBackRight;
+
   /** Creates a new SwerveDrive. */
   public SwerveDrive(
     SwerveModule moduleFrontLeft,
@@ -29,6 +30,22 @@ public class SwerveDrive extends SubsystemBase {
   }
 
   public void drive(double speedX, double speedY, double rotation) {
+      final double deadzone = 0.15;
+      if (Math.abs(speedX) < deadzone) {
+          speedX = 0;
+      }
+      if (Math.abs(speedY) < deadzone) {
+          speedY = 0;
+      }
+      if (Math.abs(rotation) < deadzone) {
+          rotation = 0;
+      }
+      rotation /= 5;
       System.out.println("Speed X: " + speedX + " Speed Y: " + speedY + " Rotation Speed: " + rotation);
+
+      moduleFrontLeft.drive(speedY, rotation);
+      moduleFrontRight.drive(speedY, rotation);
+      moduleBackLeft.drive(speedY, rotation);
+      moduleBackRight.drive(speedY, rotation);
   }
 }

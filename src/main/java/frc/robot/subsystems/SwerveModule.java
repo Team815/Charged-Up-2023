@@ -9,11 +9,16 @@ import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 /** Add your docs here. */
 public class SwerveModule {
-    private CANSparkMax spinController;
-    private CANSparkMax rotateController;
+    private final CANSparkMax spinController;
+    private final CANSparkMax rotateController;
 
     public SwerveModule(int spinControllerID, int rotateControllerID) {
         spinController = new CANSparkMax(spinControllerID, MotorType.kBrushless);
         rotateController = new CANSparkMax(rotateControllerID, MotorType.kBrushless);
+    }
+
+    public void drive(double spinSpeed, double rotateSpeed0) {
+        spinController.set(spinSpeed);
+        rotateController.set(rotateSpeed0);
     }
 }

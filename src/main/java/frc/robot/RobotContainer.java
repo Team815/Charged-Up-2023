@@ -29,14 +29,26 @@ public class RobotContainer {
   private final CommandXboxController m_driverController =
       new CommandXboxController(OperatorConstants.kDriverControllerPort);
 
-  private SwerveDrive swerveDrive = new SwerveDrive(
-    new SwerveModule(1, 2),
-    new SwerveModule(3, 4),
-    new SwerveModule(5, 6),
-    new SwerveModule(7, 8));
+  private final SwerveDrive swerveDrive;
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
+
+    final int frontLeftSpinId = 6;
+    final int frontLeftRotateId = 5;
+    final int frontRightSpinId = 3;
+    final int frontRightRotateId = 4;
+    final int backLeftSpinId = 8;
+    final int backLeftRotateId = 2;
+    final int backRightSpinId = 7;
+    final int backRightRotateId = 1;
+
+    swerveDrive = new SwerveDrive(
+            new SwerveModule(frontLeftSpinId, frontLeftRotateId),
+            new SwerveModule(frontRightSpinId, frontRightRotateId),
+            new SwerveModule(backLeftSpinId, backLeftRotateId),
+            new SwerveModule(backRightSpinId, backRightRotateId));
+
     // Configure the trigger bindings
     configureBindings();
   }
