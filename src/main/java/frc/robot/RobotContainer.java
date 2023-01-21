@@ -42,12 +42,36 @@ public class RobotContainer {
     final int backLeftRotateId = 2;
     final int backRightSpinId = 7;
     final int backRightRotateId = 1;
+    final int frontLeftRotateSensorId = 9;
+    final int frontRightRotateSensorId = 10;
+    final int backLeftRotateSensorId = 11;
+    final int backRightRotateSensorId = 12;
+    final double frontLeftRotationOffset = 30;
+    final double frontRightRotationOffset = 185;
+    final double backLeftRotationOffset = 175;
+    final double backRightRotationOffset = 105;
 
     swerveDrive = new SwerveDrive(
-            new SwerveModule(frontLeftSpinId, frontLeftRotateId),
-            new SwerveModule(frontRightSpinId, frontRightRotateId),
-            new SwerveModule(backLeftSpinId, backLeftRotateId),
-            new SwerveModule(backRightSpinId, backRightRotateId));
+            new SwerveModule(
+              frontLeftSpinId,
+              frontLeftRotateId,
+              frontLeftRotateSensorId,
+              frontLeftRotationOffset),
+            new SwerveModule(
+              frontRightSpinId,
+              frontRightRotateId,
+              frontRightRotateSensorId,
+              frontRightRotationOffset),
+            new SwerveModule(
+              backLeftSpinId,
+              backLeftRotateId,
+              backLeftRotateSensorId,
+              backLeftRotationOffset),
+            new SwerveModule(
+              backRightSpinId,
+              backRightRotateId,
+              backRightRotateSensorId,
+              backRightRotationOffset));
 
     // Configure the trigger bindings
     configureBindings();

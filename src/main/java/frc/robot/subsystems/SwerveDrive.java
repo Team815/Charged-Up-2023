@@ -4,6 +4,10 @@
 
 package frc.robot.subsystems;
 
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class SwerveDrive extends SubsystemBase {
@@ -11,6 +15,7 @@ public class SwerveDrive extends SubsystemBase {
   private final SwerveModule moduleFrontRight;
   private final SwerveModule moduleBackLeft;
   private final SwerveModule moduleBackRight;
+  private final SwerveDriveKinematics kinematics;
 
   /** Creates a new SwerveDrive. */
   public SwerveDrive(
@@ -22,6 +27,13 @@ public class SwerveDrive extends SubsystemBase {
       this.moduleFrontRight = moduleFrontRight;
       this.moduleBackLeft = moduleBackLeft;
       this.moduleBackRight = moduleBackRight;
+      final double x = 0.368;
+      final double y = 0.368;
+      kinematics = new SwerveDriveKinematics(
+        new Translation2d(x, -y),
+        new Translation2d(-x, -y),
+        new Translation2d(x, y),
+        new Translation2d(-x, y));
     }
 
   @Override
@@ -30,22 +42,28 @@ public class SwerveDrive extends SubsystemBase {
   }
 
   public void drive(double speedX, double speedY, double rotation) {
-      final double deadzone = 0.15;
-      if (Math.abs(speedX) < deadzone) {
-          speedX = 0;
-      }
-      if (Math.abs(speedY) < deadzone) {
-          speedY = 0;
-      }
-      if (Math.abs(rotation) < deadzone) {
-          rotation = 0;
-      }
-      rotation /= 5;
-      System.out.println("Speed X: " + speedX + " Speed Y: " + speedY + " Rotation Speed: " + rotation);
+      speedX = cleanInput(speedX);
+      speedY = cleanInput(speedY);
+      rotation = cleanInput(rotation);
 
-      moduleFrontLeft.drive(speedY, rotation);
-      moduleFrontRight.drive(speedY, rotation);
-      moduleBackLeft.drive(speedY, rotation);
-      moduleBackRight.drive(speedY, rotation);
+      System.out.println(speedY);
+      SwerveModuleState[] states = kinematics.toSwerveModuleStates(new ChassisSpeeds(speedX, -speedY, rotation));
+
+      for(SwerveModuleState state : states){
+        state.speedMetersPerSecond /= 5;
+      }
+
+      moduleFrontLeft.drive(states[0].speedMetersPerSecond, states[0].angle.getDegrees());
+      moduleFrontRight.drive(states[1].speedMetersPerSecond, states[1].angle.getDegrees());
+      moduleBackLeft.drive(states[2].speedMetersPerSecond, states[2].angle.getDegrees());
+      moduleBackRight.drive(states[3].speedMetersPerSecond, states[3].angle.getDegrees());
+      System.out.println("Speed: " + states[0].speedMetersPerSecond + ", rotation: " + states[0].angle.getDegrees());
+  }
+
+  private static double cleanInput(double input) {
+      final double deadzone = 0.15;
+      double multiple = 1 / (1 - deadzone);
+      double cleanedInput = (Math.abs(input) - deadzone) * multiple;
+      return Math.max(0, cleanedInput) * Math.signum(input);
   }
 }
