@@ -99,7 +99,7 @@ public class RobotContainer {
             new RunCommand(() -> {
               swerveDrive.drive(
                       m_driverController.getLeftX(),
-                      m_driverController.getLeftY(),
+                      -m_driverController.getLeftY(),
                       m_driverController.getRightX());
             },
             swerveDrive));

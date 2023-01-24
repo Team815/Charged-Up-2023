@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems;
 
+import com.ctre.phoenix.sensors.Pigeon2;
+
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -11,6 +13,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class SwerveDrive extends SubsystemBase {
+  private final Pigeon2 gyro;
   private final SwerveModule moduleFrontLeft;
   private final SwerveModule moduleFrontRight;
   private final SwerveModule moduleBackLeft;
@@ -23,6 +26,7 @@ public class SwerveDrive extends SubsystemBase {
     SwerveModule moduleFrontRight,
     SwerveModule moduleBackLeft,
     SwerveModule moduleBackRight) {
+      gyro = new Pigeon2(0);
       this.moduleFrontLeft = moduleFrontLeft;
       this.moduleFrontRight = moduleFrontRight;
       this.moduleBackLeft = moduleBackLeft;
@@ -46,11 +50,21 @@ public class SwerveDrive extends SubsystemBase {
       speedY = cleanInput(speedY);
       rotation = cleanInput(rotation);
 
-      System.out.println(speedY);
-      SwerveModuleState[] states = kinematics.toSwerveModuleStates(new ChassisSpeeds(speedX, -speedY, rotation));
+      double speed = Math.sqrt(speedX * speedX + speedY * speedY);
+      double angle = speedX != 0 ? Math.toDegrees(Math.atan(speedY / speedX)) : speedY > 0 ? 90 : -90;
+      if (speedX < 0) {
+        angle += 180;
+      }
+      angle -= gyro.getYaw() + 90;
+
+      double speedX1 = speed * Math.cos(Math.toRadians(angle));
+      double speedY1 = speed * Math.sin(Math.toRadians(angle));
+
+      System.out.printf("xStart: %.2f, yStart: %.2f, xEnd: %.2f, yEnd: %.2f\n", speedX, speedY, speedX1, speedY1);
+      SwerveModuleState[] states = kinematics.toSwerveModuleStates(new ChassisSpeeds(speedX1, speedY1, rotation));
 
       for(SwerveModuleState state : states){
-        state.speedMetersPerSecond /= 5;
+        state.speedMetersPerSecond /= 8;
       }
 
       moduleFrontLeft.drive(states[0].speedMetersPerSecond, states[0].angle.getDegrees());
