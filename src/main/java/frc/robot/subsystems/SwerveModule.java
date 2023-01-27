@@ -4,7 +4,6 @@
 
 package frc.robot.subsystems;
 
-import com.ctre.phoenix.sensors.AbsoluteSensorRange;
 import com.ctre.phoenix.sensors.CANCoder;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
@@ -39,5 +38,9 @@ public class SwerveModule {
 
     public void print(){
         System.out.println("absolute position; "+rotateSensor.getAbsolutePosition()+ ", position; "+rotateSensor.getPosition());
+    }
+
+    public double getHeading() {
+        return rotateSensor.getAbsolutePosition();
     }
 }

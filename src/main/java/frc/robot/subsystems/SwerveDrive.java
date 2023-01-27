@@ -4,8 +4,11 @@
 
 package frc.robot.subsystems;
 
+import java.util.Arrays;
+
 import com.ctre.phoenix.sensors.Pigeon2;
 
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -18,6 +21,7 @@ public class SwerveDrive extends SubsystemBase {
   private final SwerveModule moduleFrontRight;
   private final SwerveModule moduleBackLeft;
   private final SwerveModule moduleBackRight;
+  private final SwerveModule[] modules;
   private final SwerveDriveKinematics kinematics;
 
   /** Creates a new SwerveDrive. */
@@ -27,10 +31,16 @@ public class SwerveDrive extends SubsystemBase {
     SwerveModule moduleBackLeft,
     SwerveModule moduleBackRight) {
       gyro = new Pigeon2(0);
+      resetGyro();
       this.moduleFrontLeft = moduleFrontLeft;
       this.moduleFrontRight = moduleFrontRight;
       this.moduleBackLeft = moduleBackLeft;
       this.moduleBackRight = moduleBackRight;
+      modules = new SwerveModule[] {
+        this.moduleFrontLeft,
+        this.moduleFrontRight,
+        this.moduleBackLeft,
+        this.moduleBackRight};
       final double x = 0.368;
       final double y = 0.368;
       kinematics = new SwerveDriveKinematics(
@@ -55,23 +65,24 @@ public class SwerveDrive extends SubsystemBase {
       if (speedX < 0) {
         angle += 180;
       }
-      angle -= gyro.getYaw() + 90;
+      angle -= gyro.getYaw();
 
       double speedX1 = speed * Math.cos(Math.toRadians(angle));
       double speedY1 = speed * Math.sin(Math.toRadians(angle));
 
-      System.out.printf("xStart: %.2f, yStart: %.2f, xEnd: %.2f, yEnd: %.2f\n", speedX, speedY, speedX1, speedY1);
+      //System.out.printf("xStart: %.2f, yStart: %.2f, xEnd: %.2f, yEnd: %.2f\n", speedX, speedY, speedX1, speedY1);
       SwerveModuleState[] states = kinematics.toSwerveModuleStates(new ChassisSpeeds(speedX1, speedY1, rotation));
 
-      for(SwerveModuleState state : states){
-        state.speedMetersPerSecond /= 8;
+      for(int i = 0; i < modules.length; i++) {
+        // TODO: This line does not work, fix it!
+        var newState = SwerveModuleState.optimize(states[i], Rotation2d.fromDegrees(modules[i].getHeading()));
+        System.out.println(modules[i].getHeading());
+        //modules[i].drive(newState.speedMetersPerSecond / 8, newState.angle.getDegrees());
       }
+  }
 
-      moduleFrontLeft.drive(states[0].speedMetersPerSecond, states[0].angle.getDegrees());
-      moduleFrontRight.drive(states[1].speedMetersPerSecond, states[1].angle.getDegrees());
-      moduleBackLeft.drive(states[2].speedMetersPerSecond, states[2].angle.getDegrees());
-      moduleBackRight.drive(states[3].speedMetersPerSecond, states[3].angle.getDegrees());
-      System.out.println("Speed: " + states[0].speedMetersPerSecond + ", rotation: " + states[0].angle.getDegrees());
+  public void resetGyro() {
+    gyro.setYaw(0);
   }
 
   private static double cleanInput(double input) {
