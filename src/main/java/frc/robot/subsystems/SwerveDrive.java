@@ -73,11 +73,9 @@ public class SwerveDrive extends SubsystemBase {
       //System.out.printf("xStart: %.2f, yStart: %.2f, xEnd: %.2f, yEnd: %.2f\n", speedX, speedY, speedX1, speedY1);
       SwerveModuleState[] states = kinematics.toSwerveModuleStates(new ChassisSpeeds(speedX1, speedY1, rotation));
 
-      for(int i = 0; i < modules.length; i++) {
-        // TODO: This line does not work, fix it!
-        var newState = SwerveModuleState.optimize(states[i], Rotation2d.fromDegrees(modules[i].getHeading()));
-        System.out.println(modules[i].getHeading());
-        //modules[i].drive(newState.speedMetersPerSecond / 8, newState.angle.getDegrees());
+      for(int i = 0; i < 4; i++) {
+        var newState = modules[i].optimize(states[i]);
+        modules[i].drive(newState.speedMetersPerSecond, newState.angle.getDegrees());
       }
   }
 
