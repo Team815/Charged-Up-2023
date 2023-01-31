@@ -26,18 +26,16 @@ public class SwerveModule {
         rotateController = new CANSparkMax(rotateControllerID, MotorType.kBrushless);
         rotateSensor = new CANCoder(rotateSensorID);
         this.rotationOffset = rotationOffset;
-        pid = new PIDController(0.01, 0, 0);
+        pid = new PIDController(0.01, 0.004, 0);
         pid.enableContinuousInput(0, 360);
     }
 
     public void drive(SwerveModuleState state) {
-        state = optimize(state);
-        double spinSpeed = state.speedMetersPerSecond;
-        double rotation = state.angle.getDegrees();
-        spinController.set(spinSpeed);
-        pid.setSetpoint(rotation);
+        spinController.set(state.speedMetersPerSecond);
+        pid.setSetpoint(0);
         double response = -pid.calculate(rotateSensor.getAbsolutePosition());
         rotateController.set(Math.min(0.2, Math.abs(response)) * Math.signum(response));
+        System.out.println(rotateSensor.getAbsolutePosition());
     }
 
     private SwerveModuleState optimize(SwerveModuleState state) {
