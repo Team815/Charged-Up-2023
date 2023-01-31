@@ -30,14 +30,17 @@ public class SwerveModule {
         pid.enableContinuousInput(0, 360);
     }
 
-    public void drive(double spinSpeed, double rotation) {
+    public void drive(SwerveModuleState state) {
+        state = optimize(state);
+        double spinSpeed = state.speedMetersPerSecond;
+        double rotation = state.angle.getDegrees();
         spinController.set(spinSpeed);
         pid.setSetpoint(rotation);
         double response = -pid.calculate(rotateSensor.getAbsolutePosition());
         rotateController.set(Math.min(0.2, Math.abs(response)) * Math.signum(response));
     }
 
-    public SwerveModuleState optimize(SwerveModuleState state) {
+    private SwerveModuleState optimize(SwerveModuleState state) {
         return SwerveModuleState.optimize(
             new SwerveModuleState(
                 state.speedMetersPerSecond,

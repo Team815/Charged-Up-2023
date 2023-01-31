@@ -4,11 +4,9 @@
 
 package frc.robot.subsystems;
 
-import java.util.Arrays;
-
 import com.ctre.phoenix.sensors.Pigeon2;
 
-import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -23,6 +21,7 @@ public class SwerveDrive extends SubsystemBase {
   private final SwerveModule moduleBackRight;
   private final SwerveModule[] modules;
   private final SwerveDriveKinematics kinematics;
+  private final PIDController pid;
 
   /** Creates a new SwerveDrive. */
   public SwerveDrive(
@@ -48,6 +47,7 @@ public class SwerveDrive extends SubsystemBase {
         new Translation2d(-x, -y),
         new Translation2d(x, y),
         new Translation2d(-x, y));
+      pid = new PIDController(0.01, 0, 0);
     }
 
   @Override
@@ -59,28 +59,34 @@ public class SwerveDrive extends SubsystemBase {
       speedX = cleanInput(speedX);
       speedY = cleanInput(speedY);
       rotation = cleanInput(rotation);
+      double yaw = gyro.getYaw();
 
       double speed = Math.sqrt(speedX * speedX + speedY * speedY);
       double angle = speedX != 0 ? Math.toDegrees(Math.atan(speedY / speedX)) : speedY > 0 ? 90 : -90;
       if (speedX < 0) {
         angle += 180;
       }
-      angle -= gyro.getYaw();
+      angle -= yaw;
 
       double speedX1 = speed * Math.cos(Math.toRadians(angle));
       double speedY1 = speed * Math.sin(Math.toRadians(angle));
 
-      //System.out.printf("xStart: %.2f, yStart: %.2f, xEnd: %.2f, yEnd: %.2f\n", speedX, speedY, speedX1, speedY1);
+      if (rotation != 0) {
+        pid.setSetpoint(yaw);
+      } else {
+        rotation -= pid.calculate(yaw);
+      }
+
       SwerveModuleState[] states = kinematics.toSwerveModuleStates(new ChassisSpeeds(speedX1, speedY1, rotation));
 
       for(int i = 0; i < 4; i++) {
-        var newState = modules[i].optimize(states[i]);
-        modules[i].drive(newState.speedMetersPerSecond, newState.angle.getDegrees());
+        modules[i].drive(states[i]);
       }
   }
 
   public void resetGyro() {
     gyro.setYaw(0);
+    pid.setSetpoint(0);
   }
 
   private static double cleanInput(double input) {
