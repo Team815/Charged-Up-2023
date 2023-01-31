@@ -29,6 +29,7 @@ public class SwerveDrive extends SubsystemBase {
     SwerveModule moduleFrontRight,
     SwerveModule moduleBackLeft,
     SwerveModule moduleBackRight) {
+      pid = new PIDController(0.01, 0, 0);
       gyro = new Pigeon2(0);
       resetGyro();
       this.moduleFrontLeft = moduleFrontLeft;
@@ -47,7 +48,6 @@ public class SwerveDrive extends SubsystemBase {
         new Translation2d(-x, -y),
         new Translation2d(x, y),
         new Translation2d(-x, y));
-      pid = new PIDController(0.01, 0, 0);
     }
 
   @Override
