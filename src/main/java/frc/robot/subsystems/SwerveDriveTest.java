@@ -4,7 +4,7 @@
 
 package frc.robot.subsystems;
 
-//import com.kauailabs.navx.frc.AHRS;
+import com.ctre.phoenix.sensors.Pigeon2;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -13,6 +13,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.DriveConstants;
@@ -56,12 +57,14 @@ public class SwerveDriveTest extends SubsystemBase {
             DriveConstants.kBackRightDriveAbsoluteEncoderOffsetRad,
             DriveConstants.kBackRightDriveAbsoluteEncoderReversed);
 
-    //private final AHRS gyro = new AHRS(SPI.Port.kMXP);    
+    private final Pigeon2 gyro = new Pigeon2(0);  
 
-    private final Translation2d frontLeftLocation = new Translation2d(DriveConstants.kWheelBase / 2, -DriveConstants.kTrackWidth / 2);
-    private final Translation2d frontRightLocation = new Translation2d(DriveConstants.kWheelBase / 2, DriveConstants.kTrackWidth / 2);
-    private final Translation2d backLeftLocation = new Translation2d(-DriveConstants.kWheelBase / 2, -DriveConstants.kTrackWidth / 2);
-    private final Translation2d backRightLocation = new Translation2d(-DriveConstants.kWheelBase / 2, DriveConstants.kTrackWidth / 2);
+    private final double kWheelBaseX = 0.368;
+    private final double kWheelBaseY = 0.368;
+    private final Translation2d frontLeftLocation = new Translation2d(kWheelBaseX, -kWheelBaseY);
+    private final Translation2d frontRightLocation = new Translation2d(kWheelBaseX, kWheelBaseY);
+    private final Translation2d backLeftLocation = new Translation2d(-kWheelBaseX, -kWheelBaseY);
+    private final Translation2d backRightLocation = new Translation2d(-kWheelBaseX, kWheelBaseY);
     
     private final SlewRateLimiter xLimiter, yLimiter, turningLimiter;
 
@@ -87,26 +90,18 @@ public class SwerveDriveTest extends SubsystemBase {
     new Thread(() -> {
         try {
             Thread.sleep(1000);
-            zeroHeading();
+            resetGyro();
         } catch (Exception e) {
         }
     }).start();
   }
 
   public Rotation2d getGyroAngle(){
-    return new Rotation2d();
+    return Rotation2d.fromDegrees(gyro.getYaw());
   }
 
-  public void zeroHeading() {
-      //gyro.reset();
-  }
-
-  public double getHeading() {
-      return Math.IEEEremainder(getGyroAngle().getDegrees(), 360);
-  }
-
-  public Rotation2d getRotation2d() {
-      return Rotation2d.fromDegrees(getHeading());
+  public void resetGyro() {
+    gyro.setYaw(0);
   }
 
   public Pose2d getPose() {
@@ -124,13 +119,12 @@ public class SwerveDriveTest extends SubsystemBase {
 
   @Override
   public void periodic() {
-      odometer.update(getRotation2d(), new SwerveModulePosition[] {
+      odometer.update(getGyroAngle(), new SwerveModulePosition[] {
         frontLeft.getPosition(),
         frontRight.getPosition(),
         backLeft.getPosition(),
         backRight.getPosition()
       });
-      SmartDashboard.putNumber("Robot Heading", getHeading());
       SmartDashboard.putString("Robot Location", getPose().getTranslation().toString());
   }
 
@@ -150,6 +144,10 @@ public class SwerveDriveTest extends SubsystemBase {
   }
 
   public void drive(double speedX, double speedY, double rotation) {
+    drive(speedX, speedY, rotation, false);
+  } 
+
+  public void drive(double speedX, double speedY, double rotation, Boolean fieldRelativeSpeed) {
         // 1. Get real-time joystick inputs
         double xSpeed = speedX;
         double ySpeed = speedY;
@@ -168,19 +166,19 @@ public class SwerveDriveTest extends SubsystemBase {
 
         // 4. Construct desired chassis speeds
         ChassisSpeeds chassisSpeeds;
-        if (fieldOrientedFunction.get()) {
+        if (fieldRelativeSpeed) {
             // Relative to field
             chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-                    xSpeed, ySpeed, turningSpeed, swerveSubsystem.getRotation2d());
+                    xSpeed, ySpeed, turningSpeed, getGyroAngle());
         } else {
             // Relative to robot
             chassisSpeeds = new ChassisSpeeds(xSpeed, ySpeed, turningSpeed);
         }
 
         // 5. Convert chassis speeds to individual module states
-        SwerveModuleState[] moduleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(chassisSpeeds);
+        SwerveModuleState[] moduleStates = kDriveKinematics.toSwerveModuleStates(chassisSpeeds);
 
         // 6. Output each module states to wheels
-        swerveSubsystem.setModuleStates(moduleStates);
+        setModuleStates(moduleStates);
     }    
 }
