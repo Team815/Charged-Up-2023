@@ -21,7 +21,7 @@ public class SwerveDrive extends SubsystemBase {
   private final SwerveModule moduleBackRight;
   private final SwerveModule[] modules;
   private final SwerveDriveKinematics kinematics;
-  private final PIDController pid;
+  private final PIDController pid = new PIDController(0.01, 0, 0);
 
   /** Creates a new SwerveDrive. */
   public SwerveDrive(
@@ -47,7 +47,6 @@ public class SwerveDrive extends SubsystemBase {
         new Translation2d(-x, -y),
         new Translation2d(x, y),
         new Translation2d(-x, y));
-      pid = new PIDController(0.01, 0, 0);
     }
 
   @Override
@@ -74,7 +73,7 @@ public class SwerveDrive extends SubsystemBase {
       if (rotation != 0) {
         pid.setSetpoint(yaw);
       } else {
-        rotation -= pid.calculate(yaw);
+        //rotation -= pid.calculate(yaw);
       }
 
       SwerveModuleState[] states = kinematics.toSwerveModuleStates(new ChassisSpeeds(speedX1, speedY1, rotation));
