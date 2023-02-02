@@ -5,6 +5,7 @@
 package frc.robot.subsystems;
 
 //import com.kauailabs.navx.frc.AHRS;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -15,6 +16,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.DriveConstants;
+import frc.robot.Constants.OIConstants;
 
 public class SwerveDriveTest extends SubsystemBase {
   
@@ -61,6 +63,8 @@ public class SwerveDriveTest extends SubsystemBase {
     private final Translation2d backLeftLocation = new Translation2d(-DriveConstants.kWheelBase / 2, -DriveConstants.kTrackWidth / 2);
     private final Translation2d backRightLocation = new Translation2d(-DriveConstants.kWheelBase / 2, DriveConstants.kTrackWidth / 2);
     
+    private final SlewRateLimiter xLimiter, yLimiter, turningLimiter;
+
     public final SwerveDriveKinematics kDriveKinematics = new SwerveDriveKinematics(
         frontLeftLocation, frontRightLocation, backLeftLocation, backRightLocation
     );
@@ -76,6 +80,10 @@ public class SwerveDriveTest extends SubsystemBase {
                 
   /** Creates a new SwerveDrive. */
   public SwerveDriveTest() {
+    this.xLimiter = new SlewRateLimiter(DriveConstants.kTeleDriveMaxAccelerationUnitsPerSecond);
+    this.yLimiter = new SlewRateLimiter(DriveConstants.kTeleDriveMaxAccelerationUnitsPerSecond);
+    this.turningLimiter = new SlewRateLimiter(DriveConstants.kTeleDriveMaxAngularAccelerationUnitsPerSecond);
+
     new Thread(() -> {
         try {
             Thread.sleep(1000);
@@ -140,4 +148,39 @@ public class SwerveDriveTest extends SubsystemBase {
       backLeft.setDesiredState(desiredStates[2]);
       backRight.setDesiredState(desiredStates[3]);
   }
+
+  public void drive(double speedX, double speedY, double rotation) {
+        // 1. Get real-time joystick inputs
+        double xSpeed = speedX;
+        double ySpeed = speedY;
+        double turningSpeed = rotation;
+
+        // 2. Apply deadband
+        xSpeed = Math.abs(xSpeed) > OIConstants.kDeadband ? xSpeed : 0.0;
+        ySpeed = Math.abs(ySpeed) > OIConstants.kDeadband ? ySpeed : 0.0;
+        turningSpeed = Math.abs(turningSpeed) > OIConstants.kDeadband ? turningSpeed : 0.0;
+
+        // 3. Make the driving smoother
+        xSpeed = xLimiter.calculate(xSpeed) * DriveConstants.kTeleDriveMaxSpeedMetersPerSecond;
+        ySpeed = yLimiter.calculate(ySpeed) * DriveConstants.kTeleDriveMaxSpeedMetersPerSecond;
+        turningSpeed = turningLimiter.calculate(turningSpeed)
+                * DriveConstants.kTeleDriveMaxAngularSpeedRadiansPerSecond;
+
+        // 4. Construct desired chassis speeds
+        ChassisSpeeds chassisSpeeds;
+        if (fieldOrientedFunction.get()) {
+            // Relative to field
+            chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+                    xSpeed, ySpeed, turningSpeed, swerveSubsystem.getRotation2d());
+        } else {
+            // Relative to robot
+            chassisSpeeds = new ChassisSpeeds(xSpeed, ySpeed, turningSpeed);
+        }
+
+        // 5. Convert chassis speeds to individual module states
+        SwerveModuleState[] moduleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(chassisSpeeds);
+
+        // 6. Output each module states to wheels
+        swerveSubsystem.setModuleStates(moduleStates);
+    }    
 }
