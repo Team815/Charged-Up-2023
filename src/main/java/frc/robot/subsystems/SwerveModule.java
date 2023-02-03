@@ -4,7 +4,6 @@
 
 package frc.robot.subsystems;
 
-import com.ctre.phoenix.sensors.AbsoluteSensorRange;
 import com.ctre.phoenix.sensors.CANCoder;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
@@ -19,13 +18,11 @@ public class SwerveModule {
     private final CANSparkMax rotateController;
     private final CANCoder rotateSensor;
     private final PIDController pid;
-    private final double rotationOffset;
 
-    public SwerveModule(int spinControllerID, int rotateControllerID, int rotateSensorID, double rotationOffset) {
+    public SwerveModule(int spinControllerID, int rotateControllerID, int rotateSensorID) {
         spinController = new CANSparkMax(spinControllerID, MotorType.kBrushless);
         rotateController = new CANSparkMax(rotateControllerID, MotorType.kBrushless);
         rotateSensor = new CANCoder(rotateSensorID);
-        this.rotationOffset = rotationOffset;
         pid = new PIDController(0.01, 0, 0);
         pid.enableContinuousInput(0, 360);
     }
@@ -44,7 +41,7 @@ public class SwerveModule {
         return SwerveModuleState.optimize(
             new SwerveModuleState(
                 state.speedMetersPerSecond,
-                Rotation2d.fromDegrees(state.angle.getDegrees() + rotationOffset)),
+                Rotation2d.fromDegrees(state.angle.getDegrees())),
             Rotation2d.fromDegrees(rotateSensor.getAbsolutePosition()));
     }
 
