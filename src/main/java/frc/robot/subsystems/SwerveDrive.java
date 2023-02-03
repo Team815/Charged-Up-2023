@@ -29,6 +29,7 @@ public class SwerveDrive extends SubsystemBase {
     SwerveModule moduleFrontRight,
     SwerveModule moduleBackLeft,
     SwerveModule moduleBackRight) {
+      pid = new PIDController(0.01, 0, 0);
       gyro = new Pigeon2(0);
       resetGyro();
       this.moduleFrontLeft = moduleFrontLeft;
@@ -43,11 +44,10 @@ public class SwerveDrive extends SubsystemBase {
       final double x = 0.368;
       final double y = 0.368;
       kinematics = new SwerveDriveKinematics(
-        new Translation2d(x, -y),
         new Translation2d(-x, -y),
-        new Translation2d(x, y),
-        new Translation2d(-x, y));
-      pid = new PIDController(0.01, 0, 0);
+        new Translation2d(-x, y),
+        new Translation2d(x, -y),
+        new Translation2d(x, y));
     }
 
   @Override
@@ -66,7 +66,7 @@ public class SwerveDrive extends SubsystemBase {
       if (speedX < 0) {
         angle += 180;
       }
-      angle -= yaw;
+      angle += yaw;
 
       double speedX1 = speed * Math.cos(Math.toRadians(angle));
       double speedY1 = speed * Math.sin(Math.toRadians(angle));
@@ -77,7 +77,7 @@ public class SwerveDrive extends SubsystemBase {
         rotation -= pid.calculate(yaw);
       }
 
-      SwerveModuleState[] states = kinematics.toSwerveModuleStates(new ChassisSpeeds(speedX1, speedY1, rotation));
+      SwerveModuleState[] states = kinematics.toSwerveModuleStates(new ChassisSpeeds(speedY1, speedX1, rotation));
 
       for(int i = 0; i < 4; i++) {
         modules[i].drive(states[i]);

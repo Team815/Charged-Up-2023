@@ -47,32 +47,24 @@ public class RobotContainer {
     final int frontRightRotateSensorId = 10;
     final int backLeftRotateSensorId = 11;
     final int backRightRotateSensorId = 12;
-    final double frontLeftRotationOffset = 30;
-    final double frontRightRotationOffset = 185;
-    final double backLeftRotationOffset = 175;
-    final double backRightRotationOffset = 105;
 
     swerveDrive = new SwerveDrive(
             new SwerveModule(
               frontLeftSpinId,
               frontLeftRotateId,
-              frontLeftRotateSensorId,
-              frontLeftRotationOffset),
+              frontLeftRotateSensorId),
             new SwerveModule(
               frontRightSpinId,
               frontRightRotateId,
-              frontRightRotateSensorId,
-              frontRightRotationOffset),
+              frontRightRotateSensorId),
             new SwerveModule(
               backLeftSpinId,
               backLeftRotateId,
-              backLeftRotateSensorId,
-              backLeftRotationOffset),
+              backLeftRotateSensorId),
             new SwerveModule(
               backRightSpinId,
               backRightRotateId,
-              backRightRotateSensorId,
-              backRightRotationOffset));
+              backRightRotateSensorId));
 
     // Configure the trigger bindings
     configureBindings();
@@ -98,10 +90,17 @@ public class RobotContainer {
 
     m_driverController.start().onTrue(new InstantCommand(() -> {swerveDrive.resetGyro();}));
 
+    // The robot assumes positive sideways direction is to the left,
+    // but the controller positive sideways direction is to the right.
+    // Therefore, we must negate the left joystick's X direction.
+    //
+    // The robot assumes positive vertical direction is forward,
+    // but the controller positive vertical direction is down (backward).
+    // Therefore, we must negate the left joystick's Y direction.
     swerveDrive.setDefaultCommand(
             new RunCommand(() -> {
               swerveDrive.drive(
-                      m_driverController.getLeftX(),
+                      -m_driverController.getLeftX(),
                       -m_driverController.getLeftY(),
                       m_driverController.getRightX());
             },
