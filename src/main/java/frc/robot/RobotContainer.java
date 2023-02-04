@@ -23,97 +23,101 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
  * subsystems, commands, and trigger mappings) should be declared here.
  */
 public class RobotContainer {
-  // The robot's subsystems and commands are defined here...
-  private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
+    // The robot's subsystems and commands are defined here...
+    private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
 
-  // Replace with CommandPS4Controller or CommandJoystick if needed
-  private final CommandXboxController m_driverController =
-      new CommandXboxController(OperatorConstants.kDriverControllerPort);
+    // Replace with CommandPS4Controller or CommandJoystick if needed
+    private final CommandXboxController m_driverController =
+        new CommandXboxController(OperatorConstants.kDriverControllerPort);
 
-  private final SwerveDrive swerveDrive;
+    private final SwerveDrive swerveDrive;
 
-  /** The container for the robot. Contains subsystems, OI devices, and commands. */
-  public RobotContainer() {
+    /**
+     * The container for the robot. Contains subsystems, OI devices, and commands.
+     */
+    public RobotContainer() {
 
-    final int frontLeftSpinId = 6;
-    final int frontLeftRotateId = 5;
-    final int frontRightSpinId = 3;
-    final int frontRightRotateId = 4;
-    final int backLeftSpinId = 8;
-    final int backLeftRotateId = 2;
-    final int backRightSpinId = 7;
-    final int backRightRotateId = 1;
-    final int frontLeftRotateSensorId = 9;
-    final int frontRightRotateSensorId = 10;
-    final int backLeftRotateSensorId = 11;
-    final int backRightRotateSensorId = 12;
+        final int frontLeftSpinId = 6;
+        final int frontLeftRotateId = 5;
+        final int frontRightSpinId = 3;
+        final int frontRightRotateId = 4;
+        final int backLeftSpinId = 8;
+        final int backLeftRotateId = 2;
+        final int backRightSpinId = 7;
+        final int backRightRotateId = 1;
+        final int frontLeftRotateSensorId = 9;
+        final int frontRightRotateSensorId = 10;
+        final int backLeftRotateSensorId = 11;
+        final int backRightRotateSensorId = 12;
 
-    swerveDrive = new SwerveDrive(
+        swerveDrive = new SwerveDrive(
             new SwerveModule(
-              frontLeftSpinId,
-              frontLeftRotateId,
-              frontLeftRotateSensorId),
+                frontLeftSpinId,
+                frontLeftRotateId,
+                frontLeftRotateSensorId),
             new SwerveModule(
-              frontRightSpinId,
-              frontRightRotateId,
-              frontRightRotateSensorId),
+                frontRightSpinId,
+                frontRightRotateId,
+                frontRightRotateSensorId),
             new SwerveModule(
-              backLeftSpinId,
-              backLeftRotateId,
-              backLeftRotateSensorId),
+                backLeftSpinId,
+                backLeftRotateId,
+                backLeftRotateSensorId),
             new SwerveModule(
-              backRightSpinId,
-              backRightRotateId,
-              backRightRotateSensorId));
+                backRightSpinId,
+                backRightRotateId,
+                backRightRotateSensorId));
 
-    // Configure the trigger bindings
-    configureBindings();
-  }
+        // Configure the trigger bindings
+        configureBindings();
+    }
 
-  /**
-   * Use this method to define your trigger->command mappings. Triggers can be created via the
-   * {@link Trigger#Trigger(java.util.function.BooleanSupplier)} constructor with an arbitrary
-   * predicate, or via the named factories in {@link
-   * edu.wpi.first.wpilibj2.command.button.CommandGenericHID}'s subclasses for {@link
-   * CommandXboxController Xbox}/{@link edu.wpi.first.wpilibj2.command.button.CommandPS4Controller
-   * PS4} controllers or {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight
-   * joysticks}.
-   */
-  private void configureBindings() {
-    // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
-    new Trigger(m_exampleSubsystem::exampleCondition)
-        .onTrue(new ExampleCommand(m_exampleSubsystem));
+    /**
+     * Use this method to define your trigger->command mappings. Triggers can be created via the
+     * {@link Trigger#Trigger(java.util.function.BooleanSupplier)} constructor with an arbitrary
+     * predicate, or via the named factories in {@link
+     * edu.wpi.first.wpilibj2.command.button.CommandGenericHID}'s subclasses for {@link
+     * CommandXboxController Xbox}/{@link edu.wpi.first.wpilibj2.command.button.CommandPS4Controller
+     * PS4} controllers or {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight
+     * joysticks}.
+     */
+    private void configureBindings() {
+        // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
+        new Trigger(m_exampleSubsystem::exampleCondition)
+            .onTrue(new ExampleCommand(m_exampleSubsystem));
 
-    // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
-    // cancelling on release.
-    m_driverController.b().whileTrue(m_exampleSubsystem.exampleMethodCommand());
+        // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
+        // cancelling on release.
+        m_driverController.b().whileTrue(m_exampleSubsystem.exampleMethodCommand());
 
-    m_driverController.start().onTrue(new InstantCommand(() -> {swerveDrive.resetGyro();}));
+        m_driverController.start().onTrue(new InstantCommand(() -> {
+            swerveDrive.resetGyro();
+        }));
 
-    // The robot assumes positive sideways direction is to the left,
-    // but the controller positive sideways direction is to the right.
-    // Therefore, we must negate the left joystick's X direction.
-    //
-    // The robot assumes positive vertical direction is forward,
-    // but the controller positive vertical direction is down (backward).
-    // Therefore, we must negate the left joystick's Y direction.
-    swerveDrive.setDefaultCommand(
+        // The robot assumes positive sideways direction is to the left,
+        // but the controller positive sideways direction is to the right.
+        // Therefore, we must negate the left joystick's X direction.
+        //
+        // The robot assumes positive vertical direction is forward,
+        // but the controller positive vertical direction is down (backward).
+        // Therefore, we must negate the left joystick's Y direction.
+        swerveDrive.setDefaultCommand(
             new RunCommand(() -> {
-              swerveDrive.drive(
-                      -m_driverController.getLeftX(),
-                      -m_driverController.getLeftY(),
-                      m_driverController.getRightX());
+                swerveDrive.drive(
+                    -m_driverController.getLeftX(),
+                    -m_driverController.getLeftY(),
+                    m_driverController.getRightX());
             },
-            swerveDrive));
-  }
+                swerveDrive));
+    }
 
-  /**
-   * Use this to pass the autonomous command to the main {@link Robot} class.
-   *
-   * @return the command to run in autonomous
-   */
-  public Command getAutonomousCommand() {
-    // An example command will be run in autonomous
-    return Autos.exampleAuto(m_exampleSubsystem);
-  }
+    /**
+     * Use this to pass the autonomous command to the main {@link Robot} class.
+     *
+     * @return the command to run in autonomous
+     */
+    public Command getAutonomousCommand() {
+        // An example command will be run in autonomous
+        return swerveDrive.myCommand();
+    }
 }

@@ -10,9 +10,12 @@ import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 
-/** Add your docs here. */
+/**
+ * Add your docs here.
+ */
 public class SwerveModule {
     private final CANSparkMax spinController;
     private final CANSparkMax rotateController;
@@ -37,16 +40,17 @@ public class SwerveModule {
         rotateController.set(Math.min(0.2, Math.abs(response)) * Math.signum(response));
     }
 
+    public SwerveModulePosition getPosition() {
+        return new SwerveModulePosition(
+            spinController.getEncoder().getPosition(),
+            Rotation2d.fromDegrees(rotateSensor.getAbsolutePosition()));
+    }
+
     private SwerveModuleState optimize(SwerveModuleState state) {
         return SwerveModuleState.optimize(
             new SwerveModuleState(
                 state.speedMetersPerSecond,
                 Rotation2d.fromDegrees(state.angle.getDegrees())),
             Rotation2d.fromDegrees(rotateSensor.getAbsolutePosition()));
-    }
-
-
-    public void print(){
-        System.out.println("absolute position; "+rotateSensor.getAbsolutePosition()+ ", position; "+rotateSensor.getPosition());
     }
 }
