@@ -17,12 +17,13 @@ import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.Trajectory;
+import edu.wpi.first.math.trajectory.TrajectoryConfig;
+import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class SwerveDrive extends SubsystemBase {
@@ -35,11 +36,9 @@ public class SwerveDrive extends SubsystemBase {
     private final SwerveDriveKinematics kinematics;
     private final SwerveDriveOdometry odometry;
     private Pose2d pose;
-
-    private final ProfiledPIDController pidRotation1;
     private final PIDController pidRotation;
-    private final PIDController pidX;
-    private final PIDController pidY;
+    private double previousRotation;
+    private final Timer timer;
 
     /**
      * Creates a new SwerveDrive.
@@ -49,14 +48,7 @@ public class SwerveDrive extends SubsystemBase {
         SwerveModule moduleFrontRight,
         SwerveModule moduleBackLeft,
         SwerveModule moduleBackRight) {
-        pidRotation1 = new ProfiledPIDController(
-            0.01,
-            0,
-            0,
-            new TrapezoidProfile.Constraints(100, 100));
         pidRotation = new PIDController(0.01, 0, 0);
-        pidX = new PIDController(0.01, 0, 0);
-        pidY = new PIDController(0.01, 0, 0);
         gyro = new Pigeon2(0);
         resetGyro();
         this.moduleFrontLeft = moduleFrontLeft;
@@ -84,6 +76,7 @@ public class SwerveDrive extends SubsystemBase {
                 moduleBackLeft.getPosition(),
                 moduleBackRight.getPosition(),
             });
+        timer = new Timer();
     }
 
     @Override
@@ -96,8 +89,6 @@ public class SwerveDrive extends SubsystemBase {
                 moduleBackLeft.getPosition(),
                 moduleBackRight.getPosition(),
             });
-        // System.out.println(pose.getX());
-        System.out.println(pose.getY());
     }
 
     public void drive(double speedX, double speedY, double rotation) {
@@ -106,7 +97,12 @@ public class SwerveDrive extends SubsystemBase {
         rotation = cleanInput(rotation);
         double yaw = gyro.getYaw();
 
-        if (rotation != 0) {
+        boolean stoppedRotating = rotation == 0 && previousRotation != 0;
+        previousRotation = rotation;
+
+        if (stoppedRotating) {
+            timer.start(.2);
+        } else if (rotation != 0 || timer.isRunning()) {
             pidRotation.setSetpoint(yaw);
         } else {
             rotation -= pidRotation.calculate(yaw);
@@ -129,22 +125,23 @@ public class SwerveDrive extends SubsystemBase {
     }
 
     public CommandBase myCommand() {
-        List<Trajectory.State> states = new ArrayList<>();
-        states.add(new Trajectory.State(
-            2.0,
-            .5,
-            0,
-            new Pose2d(20, 0, Rotation2d.fromDegrees(30)),
-            0));
-        Trajectory trajectory = new Trajectory(states);
+        TrajectoryConfig config = new TrajectoryConfig(.5, 1).setKinematics(kinematics);
+
+        Trajectory exampleTrajectory =
+            TrajectoryGenerator.generateTrajectory(
+                new Pose2d(0, 0, Rotation2d.fromDegrees(0)),
+                List.of(/*new Translation2d(1, 1), new Translation2d(2, -1)*/),
+                new Pose2d(3, 0, Rotation2d.fromDegrees(0)),
+                config);
+        System.out.println(exampleTrajectory.getStates().size());
 
         return new SwerveControllerCommand(
-            trajectory,
+            exampleTrajectory,
             () -> pose,
             kinematics,
-            pidX,
-            pidY,
-            pidRotation1,
+            new PIDController(0.01, 0, 0),
+            new PIDController(0.01, 0, 0),
+            new ProfiledPIDController(0.01, 0, 0, new TrapezoidProfile.Constraints(Math.PI, Math.PI)),
             () -> Rotation2d.fromDegrees(30),
             (st) -> {
                 for (int i = 0; i < 4; i++) {
