@@ -12,6 +12,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import frc.robot.Constants;
 
 /**
  * Add your docs here.
@@ -26,7 +27,7 @@ public class SwerveModule {
         spinController = new CANSparkMax(spinControllerID, MotorType.kBrushless);
         rotateController = new CANSparkMax(rotateControllerID, MotorType.kBrushless);
         rotateSensor = new CANCoder(rotateSensorID);
-        pid = new PIDController(0.01, 0, 0);
+        pid = new PIDController(0.015, 0, 0);
         pid.enableContinuousInput(0, 360);
     }
 
@@ -34,7 +35,8 @@ public class SwerveModule {
         state = optimize(state);
         double spinSpeed = state.speedMetersPerSecond;
         double rotation = state.angle.getDegrees();
-        spinController.set(spinSpeed);
+        spinController.set(spinSpeed * Constants.DriveConstants.kPhysicalMaxSpeedPercent);
+
         pid.setSetpoint(rotation);
         double response = -pid.calculate(rotateSensor.getAbsolutePosition());
         rotateController.set(Math.min(0.2, Math.abs(response)) * Math.signum(response));

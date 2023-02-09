@@ -8,6 +8,7 @@ import com.ctre.phoenix.sensors.Pigeon2;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -23,6 +24,7 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
+import frc.robot.Constants;
 
 import java.util.List;
 
@@ -39,11 +41,13 @@ public class SwerveDrive extends SubsystemBase {
     private final PIDController pidRotation;
     private double previousRotation;
     private final Timer timer;
+    private final SlewRateLimiter xLimiter, yLimiter, turningLimiter;
 
     /**
      * Creates a new SwerveDrive.
      */
     public SwerveDrive(
+
         SwerveModule moduleFrontLeft,
         SwerveModule moduleFrontRight,
         SwerveModule moduleBackLeft,
@@ -77,6 +81,10 @@ public class SwerveDrive extends SubsystemBase {
                 moduleBackRight.getPosition(),
             });
         timer = new Timer();
+
+        this.xLimiter = new SlewRateLimiter(Constants.DriveConstants.kTeleDriveMaxAccelerationUnitsPerSecond);
+        this.yLimiter = new SlewRateLimiter(Constants.DriveConstants.kTeleDriveMaxAccelerationUnitsPerSecond);
+        this.turningLimiter = new SlewRateLimiter(Constants.DriveConstants.kTeleDriveMaxAngularAccelerationUnitsPerSecond);
     }
 
     @Override
@@ -95,18 +103,25 @@ public class SwerveDrive extends SubsystemBase {
         speedX = cleanInput(speedX);
         speedY = cleanInput(speedY);
         rotation = cleanInput(rotation);
+
         double yaw = gyro.getYaw();
 
-        boolean stoppedRotating = rotation == 0 && previousRotation != 0;
-        previousRotation = rotation;
+        //Autocorrect for Drifting
+        //boolean stoppedRotating = rotation == 0 && previousRotation != 0;
+        //previousRotation = rotation;
+        //if (stoppedrotating) {
+        //    timer.start(.2);
+        //} else if (rotation != 0 || timer.isrunning()) {
+        //    pidrotation.setsetpoint(yaw);
+        //} else {
+        //    rotation -= pidrotation.calculate(yaw);
+        //}
 
-        if (stoppedRotating) {
-            timer.start(.2);
-        } else if (rotation != 0 || timer.isRunning()) {
-            pidRotation.setSetpoint(yaw);
-        } else {
-            rotation -= pidRotation.calculate(yaw);
-        }
+        // 3. Make the driving smoother
+        speedX = xLimiter.calculate(speedX) * Constants.DriveConstants.kTeleDriveMaxSpeedMetersPerSecond;
+        speedY = yLimiter.calculate(speedY) * Constants.DriveConstants.kTeleDriveMaxSpeedMetersPerSecond;
+        rotation = turningLimiter.calculate(rotation) * Constants.DriveConstants.kTeleDriveMaxAngularSpeedRadiansPerSecond;
+
 
         ChassisSpeeds newSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
             new ChassisSpeeds(speedY, speedX, rotation),
@@ -142,7 +157,7 @@ public class SwerveDrive extends SubsystemBase {
             new PIDController(0.01, 0, 0),
             new PIDController(0.01, 0, 0),
             new ProfiledPIDController(0.01, 0, 0, new TrapezoidProfile.Constraints(Math.PI, Math.PI)),
-            () -> Rotation2d.fromDegrees(30),
+           // () -> Rotation2d.fromDegrees(30),
             (st) -> {
                 for (int i = 0; i < 4; i++) {
                     modules[i].drive(st[i]);
