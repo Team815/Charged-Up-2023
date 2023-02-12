@@ -4,8 +4,8 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.RunCommand;
-import frc.robot.Constants.OperatorConstants;
 import frc.robot.subsystems.SwerveDrive;
 import frc.robot.subsystems.SwerveModule;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -21,7 +21,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
  */
 public class RobotContainer {
     private final CommandXboxController m_driverController =
-        new CommandXboxController(OperatorConstants.kDriverControllerPort);
+        new CommandXboxController(0);
 
     private final SwerveDrive swerveDrive;
 
@@ -42,24 +42,32 @@ public class RobotContainer {
         final int frontRightRotateSensorId = 10;
         final int backLeftRotateSensorId = 11;
         final int backRightRotateSensorId = 12;
+        final double frontLeftAngularOffset = -140;
+        final double frontRightAngularOffset = 72;
+        final double backLeftAngularOffset = 98;
+        final double backRightAngularOffset = 171.5;
 
         swerveDrive = new SwerveDrive(
             new SwerveModule(
                 frontLeftSpinId,
                 frontLeftRotateId,
-                frontLeftRotateSensorId),
+                frontLeftRotateSensorId,
+                frontLeftAngularOffset),
             new SwerveModule(
                 frontRightSpinId,
                 frontRightRotateId,
-                frontRightRotateSensorId),
+                frontRightRotateSensorId,
+                frontRightAngularOffset),
             new SwerveModule(
                 backLeftSpinId,
                 backLeftRotateId,
-                backLeftRotateSensorId),
+                backLeftRotateSensorId,
+                backLeftAngularOffset),
             new SwerveModule(
                 backRightSpinId,
                 backRightRotateId,
-                backRightRotateSensorId));
+                backRightRotateSensorId,
+                backRightAngularOffset));
 
         // Configure the trigger bindings
         configureBindings();
@@ -76,20 +84,23 @@ public class RobotContainer {
      */
     private void configureBindings() {
         m_driverController.start().onTrue(new InstantCommand(swerveDrive::resetGyro));
+        m_driverController.rightBumper().onTrue(new InstantCommand(swerveDrive::resetPose));
 
-        // The robot assumes positive sideways direction is to the left,
-        // but the controller positive sideways direction is to the right.
-        // Therefore, we must negate the left joystick's X direction.
-        //
+
         // The robot assumes positive vertical direction is forward,
         // but the controller positive vertical direction is down (backward).
         // Therefore, we must negate the left joystick's Y direction.
+        //
+        // The robot also assumes positive sideways direction is to the left,
+        // but the controller positive sideways direction is to the right.
+        // Therefore, we must negate the left joystick's X direction.
         swerveDrive.setDefaultCommand(
             new RunCommand(() -> {
+                final double deadband = 0.15;
                 swerveDrive.drive(
-                    -m_driverController.getLeftX(),
-                    -m_driverController.getLeftY(),
-                    m_driverController.getRightX());
+                    MathUtil.applyDeadband(-m_driverController.getLeftY(), deadband),
+                    MathUtil.applyDeadband(-m_driverController.getLeftX(), deadband),
+                    MathUtil.applyDeadband(m_driverController.getRightX(), deadband));
             },
                 swerveDrive));
     }
@@ -101,9 +112,6 @@ public class RobotContainer {
      */
     public Command getAutonomousCommand() {
         // An example command will be run in autonomous
-        return swerveDrive.myCommand().andThen(() -> {
-            System.out.println("end");
-            swerveDrive.drive(0, 0, 0);
-        });
+        return swerveDrive.driveHeart();
     }
 }
