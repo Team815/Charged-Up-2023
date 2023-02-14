@@ -9,9 +9,9 @@ import frc.robot.subsystems.SwerveDrive;
 
 public class DriveToCommand extends CommandBase {
 
-    private SwerveDrive swerveDrive;
-    private Pose2d target;
-    private PIDController pid;
+    private final SwerveDrive swerveDrive;
+    private final Pose2d target;
+    private final PIDController pid;
 
     public DriveToCommand(Pose2d target, SwerveDrive swerveDrive) {
         super();
@@ -24,11 +24,11 @@ public class DriveToCommand extends CommandBase {
 
     @Override
     public void execute() {
-        final double maxSpeed = 0.1;
-        Pose2d pose = swerveDrive.getPose();
-        Translation2d difference = target.minus(swerveDrive.getPose()).getTranslation();
-        double response = MathUtil.clamp(Math.abs(pid.calculate(difference.getNorm())), 0, maxSpeed);
-        Translation2d speed = new Translation2d(response, difference.getAngle().rotateBy(pose.getRotation()));
+        final var maxSpeed = 0.1;
+        var pose = swerveDrive.getPose();
+        var difference = target.minus(swerveDrive.getPose()).getTranslation();
+        var response = MathUtil.clamp(Math.abs(pid.calculate(difference.getNorm())), 0, maxSpeed);
+        var speed = new Translation2d(response, difference.getAngle().rotateBy(pose.getRotation()));
         swerveDrive.drive(speed.getX(), speed.getY(), 0);
     }
 

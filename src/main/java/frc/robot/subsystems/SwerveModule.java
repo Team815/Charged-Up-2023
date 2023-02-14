@@ -37,9 +37,9 @@ public class SwerveModule {
     private final PIDController pid;
 
     static {
-        final double maxLinearRate = 0.1;
-        final double maxAngularRate = 0.1;
-        final double angularP = 0.015;
+        final var maxLinearRate = 0.1;
+        final var maxAngularRate = 0.1;
+        final var angularP = 0.015;
         maxLinearSpeed = 1;
         maxAngularSpeed = 0.2;
         var tab = Shuffleboard.getTab("SmartDashboard");
@@ -51,8 +51,7 @@ public class SwerveModule {
         angularPEntry = layout.add("Angular P", angularP).getEntry();
     }
 
-    public SwerveModule(
-        int spinControllerID, int rotateControllerID, int rotateSensorID, double angularOffset) {
+    public SwerveModule(int spinControllerID, int rotateControllerID, int rotateSensorID, double angularOffset) {
         spinController = new CANSparkMax(spinControllerID, MotorType.kBrushless);
         rotateController = new CANSparkMax(rotateControllerID, MotorType.kBrushless);
         spinController.restoreFactoryDefaults();
@@ -62,6 +61,8 @@ public class SwerveModule {
         rotateSensor.configMagnetOffset(angularOffset);
         pid = new PIDController(angularPEntry.get().getDouble(), 0, 0);
         pid.enableContinuousInput(0, 360);
+
+        // Shuffleboard listeners
 
         var inst = NetworkTableInstance.getDefault();
         inst.addListener(
@@ -88,12 +89,12 @@ public class SwerveModule {
 
     public void drive(SwerveModuleState state) {
         state = optimize(state);
-        double spinSpeed = state.speedMetersPerSecond * maxLinearSpeed;
-        double rotation = state.angle.getDegrees();
+        var spinSpeed = state.speedMetersPerSecond * maxLinearSpeed;
         spinController.set(spinSpeed);
 
+        var rotation = state.angle.getDegrees();
         pid.setSetpoint(rotation);
-        double response = -pid.calculate(rotateSensor.getAbsolutePosition());
+        var response = -pid.calculate(rotateSensor.getAbsolutePosition());
         rotateController.set(MathUtil.clamp(response, -maxAngularSpeed, maxAngularSpeed));
     }
 

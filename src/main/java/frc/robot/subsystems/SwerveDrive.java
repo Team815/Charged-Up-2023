@@ -27,6 +27,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import frc.robot.commands.DriveToCommand;
 
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -35,15 +36,13 @@ public class SwerveDrive extends SubsystemBase {
     private static double maxYSpeed;
     private static double maxAngularSpeed;
     private static boolean autoCorrectEnabled;
+    private static double autoCorrectDelay;
     private static final GenericEntry maxXSpeedEntry;
     private static final GenericEntry maxYSpeedEntry;
     private static final GenericEntry maxAngularSpeedEntry;
     private static final GenericEntry autoCorrectEnabledEntry;
+    private static final GenericEntry autoCorrectDelayEntry;
     private final Pigeon2 gyro;
-    private final SwerveModule moduleFrontLeft;
-    private final SwerveModule moduleFrontRight;
-    private final SwerveModule moduleBackLeft;
-    private final SwerveModule moduleBackRight;
     private final SwerveModule[] modules;
     private final SwerveDriveKinematics kinematics;
     private final SwerveDriveOdometry odometry;
@@ -57,12 +56,14 @@ public class SwerveDrive extends SubsystemBase {
         maxXSpeed = 1;
         maxYSpeed = 1;
         maxAngularSpeed = 1;
+        autoCorrectDelay = 0.2;
         var tab = Shuffleboard.getTab("SmartDashboard");
         var layout = tab.getLayout("Swerve Drive", BuiltInLayouts.kList).withSize(2, 3);
         maxXSpeedEntry = layout.add("Max X Speed", maxXSpeed).getEntry();
         maxYSpeedEntry = layout.add("Max Y Speed", maxYSpeed).getEntry();
         maxAngularSpeedEntry = layout.add("Max Angular Speed", maxAngularSpeed).getEntry();
         autoCorrectEnabledEntry = layout.add("Auto Correct", autoCorrectEnabled).withWidget(BuiltInWidgets.kToggleSwitch).getEntry();
+        autoCorrectDelayEntry = layout.add("Auto Correct Delay", autoCorrectDelay).getEntry();
     }
 
     /**
@@ -76,32 +77,26 @@ public class SwerveDrive extends SubsystemBase {
         pidRotation = new PIDController(0.01, 0, 0);
         gyro = new Pigeon2(0);
         resetGyro();
-        this.moduleFrontLeft = moduleFrontLeft;
-        this.moduleFrontRight = moduleFrontRight;
-        this.moduleBackLeft = moduleBackLeft;
-        this.moduleBackRight = moduleBackRight;
         modules = new SwerveModule[]{
-            this.moduleFrontLeft,
-            this.moduleFrontRight,
-            this.moduleBackLeft,
-            this.moduleBackRight};
-        final double x = 0.368;
-        final double y = 0.368;
+            moduleFrontLeft,
+            moduleFrontRight,
+            moduleBackLeft,
+            moduleBackRight
+        };
+        final var halfLength = 0.368;
+        final var halfWidth = 0.368;
         kinematics = new SwerveDriveKinematics(
-            new Translation2d(-x, -y),
-            new Translation2d(-x, y),
-            new Translation2d(x, -y),
-            new Translation2d(x, y));
+            new Translation2d(-halfLength, -halfWidth),
+            new Translation2d(-halfLength, halfWidth),
+            new Translation2d(halfLength, -halfWidth),
+            new Translation2d(halfLength, halfWidth));
         odometry = new SwerveDriveOdometry(
             kinematics,
             Rotation2d.fromDegrees(gyro.getYaw()),
-            new SwerveModulePosition[]{
-                moduleFrontLeft.getPosition(),
-                moduleFrontRight.getPosition(),
-                moduleBackLeft.getPosition(),
-                moduleBackRight.getPosition(),
-            });
+            getSwerveModulePositions(modules));
         timer = new Timer();
+
+        // Shuffleboard listeners
 
         var inst = NetworkTableInstance.getDefault();
         inst.addListener(
@@ -125,47 +120,36 @@ public class SwerveDrive extends SubsystemBase {
             maxAngularSpeedEntry,
             EnumSet.of(NetworkTableEvent.Kind.kValueAll),
             e -> maxAngularSpeed = e.valueData.value.getDouble());
+        inst.addListener(
+            autoCorrectDelayEntry,
+            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
+            e -> autoCorrectDelay = e.valueData.value.getDouble());
     }
 
     @Override
     public void periodic() {
         pose = odometry.update(
             Rotation2d.fromDegrees(gyro.getYaw()),
-            new SwerveModulePosition[]{
-                moduleFrontLeft.getPosition(),
-                moduleFrontRight.getPosition(),
-                moduleBackLeft.getPosition(),
-                moduleBackRight.getPosition(),
-            });
+            getSwerveModulePositions(modules));
     }
 
     public void drive(double speedX, double speedY, double rotation) {
-        double yaw = gyro.getYaw();
-
-        //Autocorrect for Drifting
+        var yaw = gyro.getYaw();
 
         if (autoCorrectEnabled) {
-            boolean stoppedRotating = rotation == 0 && previousRotation != 0;
-            previousRotation = rotation;
-            if (stoppedRotating) {
-                timer.start(.2);
-            } else if (rotation != 0 || timer.isRunning()) {
-                pidRotation.setSetpoint(yaw);
-            } else {
-                rotation -= pidRotation.calculate(yaw);
-            }
+            rotation = autoCorrectRotation(rotation, yaw);
         }
 
-        ChassisSpeeds newSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+        var speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
             new ChassisSpeeds(
                 speedX * maxXSpeed,
                 speedY * maxYSpeed,
                 rotation * maxAngularSpeed),
             Rotation2d.fromDegrees(yaw));
 
-        SwerveModuleState[] states = kinematics.toSwerveModuleStates(newSpeeds);
+        var states = kinematics.toSwerveModuleStates(speeds);
 
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < modules.length; i++) {
             modules[i].drive(states[i]);
         }
     }
@@ -177,12 +161,7 @@ public class SwerveDrive extends SubsystemBase {
 
     public void resetPose() {
         odometry.resetPosition(Rotation2d.fromDegrees(gyro.getYaw()),
-            new SwerveModulePosition[]{
-                moduleFrontLeft.getPosition(),
-                moduleFrontRight.getPosition(),
-                moduleBackLeft.getPosition(),
-                moduleBackRight.getPosition(),
-            },
+            getSwerveModulePositions(modules),
             new Pose2d(0, 0, Rotation2d.fromDegrees(gyro.getYaw())));
     }
 
@@ -203,9 +182,9 @@ public class SwerveDrive extends SubsystemBase {
     }
 
     public CommandBase myCommand() {
-        TrajectoryConfig config = new TrajectoryConfig(.5, 1).setKinematics(kinematics);
+        var config = new TrajectoryConfig(.5, 1).setKinematics(kinematics);
 
-        Trajectory exampleTrajectory =
+        var exampleTrajectory =
             TrajectoryGenerator.generateTrajectory(
                 new Pose2d(0, 0, Rotation2d.fromDegrees(0)),
                 List.of(new Translation2d(1, 1), new Translation2d(2, -1), new Translation2d(1, 1)),
@@ -219,10 +198,27 @@ public class SwerveDrive extends SubsystemBase {
             new PIDController(0.1, 0, 0),
             new ProfiledPIDController(.1, 0, 0, new TrapezoidProfile.Constraints(1, 1000)),
             (st) -> {
-                for (int i = 0; i < 4; i++) {
+                for (int i = 0; i < modules.length; i++) {
                     modules[i].drive(st[i]);
                 }
             },
             this);
+    }
+
+    private double autoCorrectRotation(double rotation, double yaw) {
+        var stoppedRotating = rotation == 0 && previousRotation != 0;
+        previousRotation = rotation;
+        if (stoppedRotating) {
+            timer.start(autoCorrectDelay);
+        } else if (rotation != 0 || timer.isRunning()) {
+            pidRotation.setSetpoint(yaw);
+        } else {
+            rotation -= pidRotation.calculate(yaw);
+        }
+        return rotation;
+    }
+
+    private static SwerveModulePosition[] getSwerveModulePositions(SwerveModule[] modules) {
+        return (SwerveModulePosition[]) Arrays.stream(modules).map(SwerveModule::getPosition).toArray();
     }
 }

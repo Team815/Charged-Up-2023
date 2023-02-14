@@ -30,22 +30,22 @@ public class RobotContainer {
      */
     public RobotContainer() {
 
-        final int frontLeftSpinId = 6;
-        final int frontLeftRotateId = 5;
-        final int frontRightSpinId = 3;
-        final int frontRightRotateId = 4;
-        final int backLeftSpinId = 8;
-        final int backLeftRotateId = 2;
-        final int backRightSpinId = 7;
-        final int backRightRotateId = 1;
-        final int frontLeftRotateSensorId = 9;
-        final int frontRightRotateSensorId = 10;
-        final int backLeftRotateSensorId = 11;
-        final int backRightRotateSensorId = 12;
-        final double frontLeftAngularOffset = -140;
-        final double frontRightAngularOffset = 72;
-        final double backLeftAngularOffset = 98;
-        final double backRightAngularOffset = 171.5;
+        final var frontLeftSpinId = 6;
+        final var frontLeftRotateId = 5;
+        final var frontRightSpinId = 3;
+        final var frontRightRotateId = 4;
+        final var backLeftSpinId = 8;
+        final var backLeftRotateId = 2;
+        final var backRightSpinId = 7;
+        final var backRightRotateId = 1;
+        final var frontLeftRotateSensorId = 9;
+        final var frontRightRotateSensorId = 10;
+        final var backLeftRotateSensorId = 11;
+        final var backRightRotateSensorId = 12;
+        final var frontLeftAngularOffset = -140.0;
+        final var frontRightAngularOffset = 72.0;
+        final var backLeftAngularOffset = 98.0;
+        final var backRightAngularOffset = 171.5;
 
         swerveDrive = new SwerveDrive(
             new SwerveModule(
@@ -96,7 +96,7 @@ public class RobotContainer {
         // Therefore, we must negate the left joystick's X direction.
         swerveDrive.setDefaultCommand(
             new RunCommand(() -> {
-                final double deadband = 0.15;
+                final var deadband = 0.15;
                 swerveDrive.drive(
                     MathUtil.applyDeadband(-m_driverController.getLeftY(), deadband),
                     MathUtil.applyDeadband(-m_driverController.getLeftX(), deadband),
