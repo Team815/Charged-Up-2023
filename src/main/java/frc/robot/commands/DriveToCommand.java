@@ -11,14 +11,14 @@ public class DriveToCommand extends CommandBase {
 
     private SwerveDrive swerveDrive;
     private Pose2d target;
-    private PIDController pidController;
+    private PIDController pid;
 
     public DriveToCommand(Pose2d target, SwerveDrive swerveDrive) {
         super();
         this.target = target;
         this.swerveDrive = swerveDrive;
-        pidController = new PIDController(0.04, 0, 0);
-        pidController.setTolerance(0.5);
+        pid = new PIDController(0.04, 0, 0);
+        pid.setTolerance(0.5);
         addRequirements(swerveDrive);
     }
 
@@ -27,13 +27,13 @@ public class DriveToCommand extends CommandBase {
         final double maxSpeed = 0.1;
         Pose2d pose = swerveDrive.getPose();
         Translation2d difference = target.minus(swerveDrive.getPose()).getTranslation();
-        double response = MathUtil.clamp(Math.abs(pidController.calculate(difference.getNorm())), 0, maxSpeed);
+        double response = MathUtil.clamp(Math.abs(pid.calculate(difference.getNorm())), 0, maxSpeed);
         Translation2d speed = new Translation2d(response, difference.getAngle().rotateBy(pose.getRotation()));
         swerveDrive.drive(speed.getX(), speed.getY(), 0);
     }
 
     @Override
     public boolean isFinished() {
-        return pidController.atSetpoint();
+        return pid.atSetpoint();
     }
 }
