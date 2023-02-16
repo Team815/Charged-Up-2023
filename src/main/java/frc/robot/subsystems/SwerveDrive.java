@@ -26,12 +26,14 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import frc.robot.commands.DriveToCommand;
+import frc.robot.Limelight;
 
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 
 public class SwerveDrive extends SubsystemBase {
+
     private static double maxXSpeed;
     private static double maxYSpeed;
     private static double maxAngularSpeed;
@@ -131,6 +133,9 @@ public class SwerveDrive extends SubsystemBase {
         pose = odometry.update(
             Rotation2d.fromDegrees(gyro.getYaw()),
             getSwerveModulePositions(modules));
+
+        System.out.println("Limelight X: " + Limelight.limelightField.getX());
+        System.out.println("Limelight Y: " + Limelight.limelightField.getY());
     }
 
     public void drive(double speedX, double speedY, double rotation) {
