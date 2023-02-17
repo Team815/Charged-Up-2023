@@ -52,6 +52,7 @@ public class SwerveDrive extends SubsystemBase {
     private final PIDController pidRotation;
     private double previousRotation;
     private final Timer timer;
+    private final Limelight limelight = new Limelight("limelight-field");
 
     static {
         autoCorrectEnabled = true;
@@ -134,8 +135,8 @@ public class SwerveDrive extends SubsystemBase {
             Rotation2d.fromDegrees(gyro.getYaw()),
             getSwerveModulePositions(modules));
 
-        System.out.println("Limelight X: " + Limelight.limelightField.getX());
-        System.out.println("Limelight Y: " + Limelight.limelightField.getY());
+        System.out.println("Limelight X: " + limelight.getHorizontalOffset());
+        System.out.println("Limelight Y: " + limelight.getVerticalOffset());
     }
 
     public void drive(double speedX, double speedY, double rotation) {
