@@ -4,14 +4,24 @@
 
 package frc.robot;
 
-import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.networktables.GenericEntry;
+import edu.wpi.first.networktables.NetworkTableEvent;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import frc.robot.input.InputDevice;
+import frc.robot.input.Joystick;
+import frc.robot.input.XboxController;
 import frc.robot.subsystems.SwerveDrive;
 import frc.robot.subsystems.SwerveModule;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+
+import java.util.EnumSet;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -20,10 +30,16 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
  * subsystems, commands, and trigger mappings) should be declared here.
  */
 public class RobotContainer {
-    private final CommandXboxController m_driverController =
-        new CommandXboxController(0);
+    private InputDevice inputDevice;
+    private static final GenericEntry inputDeviceChoiceEntry;
 
     private final SwerveDrive swerveDrive;
+
+    static {
+        var tab = Shuffleboard.getTab("SmartDashboard");
+        var layout = tab.getLayout("Robot", BuiltInLayouts.kList).withSize(2, 1);
+        inputDeviceChoiceEntry = layout.add("Joystick <---> Xbox Controller", true).withWidget(BuiltInWidgets.kToggleSwitch).getEntry();
+    }
 
     /**
      * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -69,6 +85,17 @@ public class RobotContainer {
                 backRightRotateSensorId,
                 backRightAngularOffset));
 
+        inputDevice = new XboxController();
+
+        var inst = NetworkTableInstance.getDefault();
+        inst.addListener(
+            inputDeviceChoiceEntry,
+            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
+            e -> {
+                var useXboxController = e.valueData.value.getBoolean();
+                inputDevice = useXboxController ? new XboxController() : new Joystick();
+            });
+
         // Configure the trigger bindings
         configureBindings();
     }
@@ -83,8 +110,7 @@ public class RobotContainer {
      * joysticks}.
      */
     private void configureBindings() {
-        m_driverController.start().onTrue(new InstantCommand(swerveDrive::resetGyro));
-        m_driverController.rightBumper().onTrue(new InstantCommand(swerveDrive::resetPose));
+        inputDevice.resetHeading().onTrue(new InstantCommand(swerveDrive::resetGyro));
 
 
         // The robot assumes positive vertical direction is forward,
@@ -95,13 +121,10 @@ public class RobotContainer {
         // but the controller positive sideways direction is to the right.
         // Therefore, we must negate the left joystick's X direction.
         swerveDrive.setDefaultCommand(
-            new RunCommand(() -> {
-                final var deadband = 0.15;
-                swerveDrive.drive(
-                    MathUtil.applyDeadband(-m_driverController.getLeftY(), deadband),
-                    MathUtil.applyDeadband(-m_driverController.getLeftX(), deadband),
-                    MathUtil.applyDeadband(m_driverController.getRightX(), deadband));
-            },
+            new RunCommand(() -> swerveDrive.drive(
+                inputDevice.getVerticalSpeed(),
+                inputDevice.getHorizontalSpeed(),
+                inputDevice.getAngularSpeed()),
                 swerveDrive));
     }
 

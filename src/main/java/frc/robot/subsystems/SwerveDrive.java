@@ -5,13 +5,13 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix.sensors.Pigeon2;
+import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.*;
-import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
@@ -31,6 +31,7 @@ import frc.robot.Limelight;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.stream.IntStream;
 
 public class SwerveDrive extends SubsystemBase {
 
@@ -154,9 +155,11 @@ public class SwerveDrive extends SubsystemBase {
 
         var states = kinematics.toSwerveModuleStates(speeds);
 
-        for (int i = 0; i < modules.length; i++) {
-            modules[i].drive(states[i]);
-        }
+        IntStream
+            .range(0, modules.length)
+            .mapToObj(i -> new Pair<>(modules[i], states[i]))
+            .parallel()
+            .forEach(pair -> pair.getFirst().drive(pair.getSecond()));
     }
 
     public void resetGyro() {
@@ -224,6 +227,9 @@ public class SwerveDrive extends SubsystemBase {
     }
 
     private static SwerveModulePosition[] getSwerveModulePositions(SwerveModule[] modules) {
-        return (SwerveModulePosition[]) Arrays.stream(modules).map(SwerveModule::getPosition).toArray();
+        return Arrays
+            .stream(modules)
+            .map(SwerveModule::getPosition)
+            .toArray(SwerveModulePosition[]::new);
     }
 }
