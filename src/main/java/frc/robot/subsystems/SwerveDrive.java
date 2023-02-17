@@ -34,7 +34,6 @@ import java.util.List;
 import java.util.stream.IntStream;
 
 public class SwerveDrive extends SubsystemBase {
-
     private static double maxXSpeed;
     private static double maxYSpeed;
     private static double maxAngularSpeed;
@@ -56,10 +55,10 @@ public class SwerveDrive extends SubsystemBase {
 
     static {
         autoCorrectEnabled = true;
-        maxXSpeed = 1;
-        maxYSpeed = 1;
-        maxAngularSpeed = 1;
-        autoCorrectDelay = 0.2;
+        maxXSpeed = 1d;
+        maxYSpeed = 1d;
+        maxAngularSpeed = 1d;
+        autoCorrectDelay = 0.2d;
         var tab = Shuffleboard.getTab("SmartDashboard");
         var layout = tab.getLayout("Swerve Drive", BuiltInLayouts.kList).withSize(2, 3);
         maxXSpeedEntry = layout.add("Max X Speed", maxXSpeed).getEntry();
@@ -77,7 +76,7 @@ public class SwerveDrive extends SubsystemBase {
         SwerveModule moduleFrontRight,
         SwerveModule moduleBackLeft,
         SwerveModule moduleBackRight) {
-        pidRotation = new PIDController(0.01, 0, 0);
+        pidRotation = new PIDController(0.01d, 0d, 0d);
         gyro = new Pigeon2(0);
         resetGyro();
         modules = new SwerveModule[]{
@@ -86,8 +85,8 @@ public class SwerveDrive extends SubsystemBase {
             moduleBackLeft,
             moduleBackRight
         };
-        final var halfLength = 0.368;
-        final var halfWidth = 0.368;
+        final var halfLength = 0.368d;
+        final var halfWidth = 0.368d;
         kinematics = new SwerveDriveKinematics(
             new Translation2d(-halfLength, -halfWidth),
             new Translation2d(-halfLength, halfWidth),
@@ -163,14 +162,14 @@ public class SwerveDrive extends SubsystemBase {
     }
 
     public void resetGyro() {
-        gyro.setYaw(0);
-        pidRotation.setSetpoint(0);
+        gyro.setYaw(0d);
+        pidRotation.setSetpoint(0d);
     }
 
     public void resetPose() {
         odometry.resetPosition(Rotation2d.fromDegrees(gyro.getYaw()),
             getSwerveModulePositions(modules),
-            new Pose2d(0, 0, Rotation2d.fromDegrees(gyro.getYaw())));
+            new Pose2d(0d, 0d, Rotation2d.fromDegrees(gyro.getYaw())));
     }
 
     public Pose2d getPose() {
@@ -179,34 +178,34 @@ public class SwerveDrive extends SubsystemBase {
 
     public CommandBase driveHeart() {
         return new InstantCommand(this::resetPose)
-            .andThen(new DriveToCommand(new Pose2d(20, 20, new Rotation2d()), this))
-            .andThen(new DriveToCommand(new Pose2d(30, 20, new Rotation2d()), this))
-            .andThen(new DriveToCommand(new Pose2d(40, 10, new Rotation2d()), this))
-            .andThen(new DriveToCommand(new Pose2d(30, 0, new Rotation2d()), this))
-            .andThen(new DriveToCommand(new Pose2d(40, -10, new Rotation2d()), this))
-            .andThen(new DriveToCommand(new Pose2d(30, -20, new Rotation2d()), this))
-            .andThen(new DriveToCommand(new Pose2d(20, -20, new Rotation2d()), this))
-            .andThen(new DriveToCommand(new Pose2d(0, 0, new Rotation2d()), this));
+            .andThen(new DriveToCommand(new Pose2d(20d, 20d, new Rotation2d()), this))
+            .andThen(new DriveToCommand(new Pose2d(30d, 20d, new Rotation2d()), this))
+            .andThen(new DriveToCommand(new Pose2d(40d, 10d, new Rotation2d()), this))
+            .andThen(new DriveToCommand(new Pose2d(30d, 0d, new Rotation2d()), this))
+            .andThen(new DriveToCommand(new Pose2d(40d, -10d, new Rotation2d()), this))
+            .andThen(new DriveToCommand(new Pose2d(30d, -20d, new Rotation2d()), this))
+            .andThen(new DriveToCommand(new Pose2d(20d, -20d, new Rotation2d()), this))
+            .andThen(new DriveToCommand(new Pose2d(0d, 0d, new Rotation2d()), this));
     }
 
     public CommandBase myCommand() {
-        var config = new TrajectoryConfig(.5, 1).setKinematics(kinematics);
+        var config = new TrajectoryConfig(0.5d, 1d).setKinematics(kinematics);
 
         var exampleTrajectory =
             TrajectoryGenerator.generateTrajectory(
-                new Pose2d(0, 0, Rotation2d.fromDegrees(0)),
-                List.of(new Translation2d(1, 1), new Translation2d(2, -1), new Translation2d(1, 1)),
-                new Pose2d(0, 0, Rotation2d.fromDegrees(0)),
+                new Pose2d(0d, 0d, Rotation2d.fromDegrees(0d)),
+                List.of(new Translation2d(1d, 1d), new Translation2d(2d, -1d), new Translation2d(1d, 1d)),
+                new Pose2d(0d, 0d, Rotation2d.fromDegrees(0d)),
                 config);
         return new SwerveControllerCommand(
             exampleTrajectory,
             () -> pose,
             kinematics,
-            new PIDController(0.1, 0, 0),
-            new PIDController(0.1, 0, 0),
-            new ProfiledPIDController(.1, 0, 0, new TrapezoidProfile.Constraints(1, 1000)),
+            new PIDController(0.1d, 0d, 0d),
+            new PIDController(0.1d, 0d, 0d),
+            new ProfiledPIDController(0.1d, 0d, 0d, new TrapezoidProfile.Constraints(1d, 1000d)),
             (st) -> {
-                for (int i = 0; i < modules.length; i++) {
+                for (var i = 0; i < modules.length; i++) {
                     modules[i].drive(st[i]);
                 }
             },
@@ -214,11 +213,11 @@ public class SwerveDrive extends SubsystemBase {
     }
 
     private double autoCorrectRotation(double rotation, double yaw) {
-        var stoppedRotating = rotation == 0 && previousRotation != 0;
+        var stoppedRotating = rotation == 0d && previousRotation != 0d;
         previousRotation = rotation;
         if (stoppedRotating) {
             timer.start(autoCorrectDelay);
-        } else if (rotation != 0 || timer.isRunning()) {
+        } else if (rotation != 0d || timer.isRunning()) {
             pidRotation.setSetpoint(yaw);
         } else {
             rotation -= pidRotation.calculate(yaw);

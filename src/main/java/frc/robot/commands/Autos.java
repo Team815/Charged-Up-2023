@@ -22,9 +22,9 @@ public final class Autos {
     public static CommandBase exampleAuto(SwerveDrive swerveDrive) {
         return Commands.sequence(
             Commands.race(
-                Commands.run(() -> swerveDrive.drive(0, 0.4, 0), swerveDrive),
+                Commands.run(() -> swerveDrive.drive(0d, 0.4d, 0d), swerveDrive),
                 Commands.waitSeconds(2.3)),
-            Commands.run(() -> swerveDrive.drive(0, 0, 0), swerveDrive));
+            Commands.run(() -> swerveDrive.drive(0d, 0d, 0d), swerveDrive));
     }
 
     private Autos() {

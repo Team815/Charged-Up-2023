@@ -17,19 +17,19 @@ public class DriveToCommand extends CommandBase {
         super();
         this.target = target;
         this.swerveDrive = swerveDrive;
-        pid = new PIDController(0.04, 0, 0);
-        pid.setTolerance(0.5);
+        pid = new PIDController(0.04d, 0d, 0d);
+        pid.setTolerance(0.5d);
         addRequirements(swerveDrive);
     }
 
     @Override
     public void execute() {
-        final var maxSpeed = 0.1;
+        final var maxSpeed = 0.1d;
         var pose = swerveDrive.getPose();
         var difference = target.minus(swerveDrive.getPose()).getTranslation();
-        var response = MathUtil.clamp(Math.abs(pid.calculate(difference.getNorm())), 0, maxSpeed);
+        var response = MathUtil.clamp(Math.abs(pid.calculate(difference.getNorm())), 0d, maxSpeed);
         var speed = new Translation2d(response, difference.getAngle().rotateBy(pose.getRotation()));
-        swerveDrive.drive(speed.getX(), speed.getY(), 0);
+        swerveDrive.drive(speed.getX(), speed.getY(), 0d);
     }
 
     @Override

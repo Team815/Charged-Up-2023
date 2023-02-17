@@ -37,11 +37,11 @@ public class SwerveModule {
     private final PIDController pid;
 
     static {
-        final var maxLinearRate = 0.1;
-        final var maxAngularRate = 0.1;
-        final var angularP = 0.015;
-        maxLinearSpeed = 1;
-        maxAngularSpeed = 0.2;
+        final var maxLinearRate = 0.1d;
+        final var maxAngularRate = 0.1d;
+        final var angularP = 0.015d;
+        maxLinearSpeed = 1d;
+        maxAngularSpeed = 0.2d;
         var tab = Shuffleboard.getTab("SmartDashboard");
         var layout = tab.getLayout("Swerve Modules", BuiltInLayouts.kList).withSize(2, 3);
         maxLinearSpeedEntry = layout.add("Max Linear Speed", maxLinearSpeed).getEntry();
@@ -59,8 +59,8 @@ public class SwerveModule {
         rotateSensor = new CANCoder(rotateSensorID);
         rotateSensor.configFactoryDefault();
         rotateSensor.configMagnetOffset(angularOffset);
-        pid = new PIDController(angularPEntry.get().getDouble(), 0, 0);
-        pid.enableContinuousInput(0, 360);
+        pid = new PIDController(angularPEntry.get().getDouble(), 0d, 0d);
+        pid.enableContinuousInput(0d, 360d);
 
         // Shuffleboard listeners
 
