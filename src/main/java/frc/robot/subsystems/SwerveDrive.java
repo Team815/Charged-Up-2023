@@ -5,6 +5,7 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix.sensors.Pigeon2;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
@@ -31,17 +32,12 @@ import frc.robot.Limelight;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.IntStream;
 
 public class SwerveDrive extends SubsystemBase {
-    private static double maxXSpeed;
-    private static double maxYSpeed;
-    private static double maxAngularSpeed;
     private static boolean autoCorrectEnabled;
     private static double autoCorrectDelay;
-    private static final GenericEntry maxXSpeedEntry;
-    private static final GenericEntry maxYSpeedEntry;
-    private static final GenericEntry maxAngularSpeedEntry;
     private static final GenericEntry autoCorrectEnabledEntry;
     private static final GenericEntry autoCorrectDelayEntry;
     private final Pigeon2 gyro;
@@ -55,17 +51,21 @@ public class SwerveDrive extends SubsystemBase {
 
     static {
         autoCorrectEnabled = true;
-        maxXSpeed = 1d;
-        maxYSpeed = 1d;
-        maxAngularSpeed = 1d;
         autoCorrectDelay = 0.2d;
         var tab = Shuffleboard.getTab("SmartDashboard");
-        var layout = tab.getLayout("Swerve Drive", BuiltInLayouts.kList).withSize(2, 3);
-        maxXSpeedEntry = layout.add("Max X Speed", maxXSpeed).getEntry();
-        maxYSpeedEntry = layout.add("Max Y Speed", maxYSpeed).getEntry();
-        maxAngularSpeedEntry = layout.add("Max Angular Speed", maxAngularSpeed).getEntry();
-        autoCorrectEnabledEntry = layout.add("Auto Correct", autoCorrectEnabled).withWidget(BuiltInWidgets.kToggleSwitch).getEntry();
-        autoCorrectDelayEntry = layout.add("Auto Correct Delay", autoCorrectDelay).getEntry();
+        var layout = tab
+            .getLayout("Swerve Drive", BuiltInLayouts.kGrid)
+            .withSize(2, 1)
+            .withProperties(Map.of("Label position", "LEFT", "Number of columns", 1, "Number of rows", 2));
+        autoCorrectEnabledEntry = layout
+            .add("Auto Correct", autoCorrectEnabled)
+            .withWidget(BuiltInWidgets.kToggleSwitch)
+            .withPosition(0, 0)
+            .getEntry();
+        autoCorrectDelayEntry = layout
+            .add("Auto Correct Delay", autoCorrectDelay)
+            .withPosition(0, 1)
+            .getEntry();
     }
 
     /**
@@ -111,18 +111,6 @@ public class SwerveDrive extends SubsystemBase {
                 }
             });
         inst.addListener(
-            maxXSpeedEntry,
-            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
-            e -> maxXSpeed = e.valueData.value.getDouble());
-        inst.addListener(
-            maxYSpeedEntry,
-            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
-            e -> maxYSpeed = e.valueData.value.getDouble());
-        inst.addListener(
-            maxAngularSpeedEntry,
-            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
-            e -> maxAngularSpeed = e.valueData.value.getDouble());
-        inst.addListener(
             autoCorrectDelayEntry,
             EnumSet.of(NetworkTableEvent.Kind.kValueAll),
             e -> autoCorrectDelay = e.valueData.value.getDouble());
@@ -133,23 +121,21 @@ public class SwerveDrive extends SubsystemBase {
         pose = odometry.update(
             Rotation2d.fromDegrees(gyro.getYaw()),
             getSwerveModulePositions(modules));
+        System.out.println(gyro.getRoll());
 
-        System.out.println("Limelight X: " + Limelight.limelightField.getX());
-        System.out.println("Limelight Y: " + Limelight.limelightField.getY());
+//        System.out.println("Limelight X: " + Limelight.limelightField.getX());
+//        System.out.println("Limelight Y: " + Limelight.limelightField.getY());
     }
 
-    public void drive(double speedX, double speedY, double rotation) {
+    public void drive(double speedX, double speedY, double rotation, double maxCorrectionSpeed) {
         var yaw = gyro.getYaw();
 
         if (autoCorrectEnabled) {
-            rotation = autoCorrectRotation(rotation, yaw);
+            rotation = autoCorrectRotation(rotation, yaw, maxCorrectionSpeed);
         }
 
         var speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-            new ChassisSpeeds(
-                speedX * maxXSpeed,
-                speedY * maxYSpeed,
-                rotation * maxAngularSpeed),
+            new ChassisSpeeds(speedX, speedY, rotation),
             Rotation2d.fromDegrees(yaw));
 
         var states = kinematics.toSwerveModuleStates(speeds);
@@ -178,14 +164,11 @@ public class SwerveDrive extends SubsystemBase {
 
     public CommandBase driveHeart() {
         return new InstantCommand(this::resetPose)
-            .andThen(new DriveToCommand(new Pose2d(20d, 20d, new Rotation2d()), this))
-            .andThen(new DriveToCommand(new Pose2d(30d, 20d, new Rotation2d()), this))
-            .andThen(new DriveToCommand(new Pose2d(40d, 10d, new Rotation2d()), this))
-            .andThen(new DriveToCommand(new Pose2d(30d, 0d, new Rotation2d()), this))
-            .andThen(new DriveToCommand(new Pose2d(40d, -10d, new Rotation2d()), this))
-            .andThen(new DriveToCommand(new Pose2d(30d, -20d, new Rotation2d()), this))
-            .andThen(new DriveToCommand(new Pose2d(20d, -20d, new Rotation2d()), this))
-            .andThen(new DriveToCommand(new Pose2d(0d, 0d, new Rotation2d()), this));
+            .andThen(new DriveToCommand(new Pose2d(40d, 0d, Rotation2d.fromDegrees(0d)), 0.15d, 0.5d, this));
+    }
+
+    public void setAngle(double angle) {
+        pidRotation.setSetpoint(angle);
     }
 
     public CommandBase myCommand() {
@@ -212,15 +195,15 @@ public class SwerveDrive extends SubsystemBase {
             this);
     }
 
-    private double autoCorrectRotation(double rotation, double yaw) {
+    private double autoCorrectRotation(double rotation, double yaw, double limit) {
         var stoppedRotating = rotation == 0d && previousRotation != 0d;
         previousRotation = rotation;
         if (stoppedRotating) {
             timer.start(autoCorrectDelay);
         } else if (rotation != 0d || timer.isRunning()) {
-            pidRotation.setSetpoint(yaw);
+            setAngle(yaw);
         } else {
-            rotation -= pidRotation.calculate(yaw);
+            rotation = MathUtil.clamp(-pidRotation.calculate(yaw), -limit, limit);
         }
         return rotation;
     }

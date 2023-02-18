@@ -19,13 +19,6 @@ public final class Autos {
     /**
      * Example static factory for an autonomous command.
      */
-    public static CommandBase exampleAuto(SwerveDrive swerveDrive) {
-        return Commands.sequence(
-            Commands.race(
-                Commands.run(() -> swerveDrive.drive(0d, 0.4d, 0d), swerveDrive),
-                Commands.waitSeconds(2.3)),
-            Commands.run(() -> swerveDrive.drive(0d, 0d, 0d), swerveDrive));
-    }
 
     private Autos() {
         throw new UnsupportedOperationException("This is a utility class!");

@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 import java.util.EnumSet;
+import java.util.Map;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -32,13 +33,41 @@ import java.util.EnumSet;
 public class RobotContainer {
     private InputDevice inputDevice;
     private static final GenericEntry inputDeviceChoiceEntry;
+    private static double maxTeleopXSpeed;
+    private static double maxTeleopYSpeed;
+    private static double maxTeleopAngularSpeed;
+    private static final GenericEntry maxTeleopXSpeedEntry;
+    private static final GenericEntry maxTeleopYSpeedEntry;
+    private static final GenericEntry maxTeleopAngularSpeedEntry;
 
     private final SwerveDrive swerveDrive;
 
     static {
+        maxTeleopXSpeed = 1d;
+        maxTeleopYSpeed = 1d;
+        maxTeleopAngularSpeed = 1d;
         var tab = Shuffleboard.getTab("SmartDashboard");
-        var layout = tab.getLayout("Robot", BuiltInLayouts.kList).withSize(2, 1);
-        inputDeviceChoiceEntry = layout.add("Joystick <---> Xbox Controller", true).withWidget(BuiltInWidgets.kToggleSwitch).getEntry();
+        var layout = tab
+            .getLayout("Teleop", BuiltInLayouts.kGrid)
+            .withSize(2, 2)
+            .withProperties(Map.of("Label position", "LEFT", "Number of columns", 1, "Number of rows", 4));
+        inputDeviceChoiceEntry = layout
+            .add("Joystick <-> Xbox Controller", true)
+            .withWidget(BuiltInWidgets.kToggleSwitch)
+            .withPosition(0, 0)
+            .getEntry();
+        maxTeleopXSpeedEntry = layout
+            .add("Max Vertical Speed", maxTeleopXSpeed)
+            .withPosition(0, 1)
+            .getEntry();
+        maxTeleopYSpeedEntry = layout
+            .add("Max Horizontal Speed", maxTeleopYSpeed)
+            .withPosition(0, 2)
+            .getEntry();
+        maxTeleopAngularSpeedEntry = layout
+            .add("Max Angular Speed", maxTeleopAngularSpeed)
+            .withPosition(0, 3)
+            .getEntry();
     }
 
     /**
@@ -95,6 +124,18 @@ public class RobotContainer {
                 var useXboxController = e.valueData.value.getBoolean();
                 inputDevice = useXboxController ? new XboxController() : new Joystick();
             });
+        inst.addListener(
+            maxTeleopXSpeedEntry,
+            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
+            e -> maxTeleopXSpeed = e.valueData.value.getDouble());
+        inst.addListener(
+            maxTeleopYSpeedEntry,
+            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
+            e -> maxTeleopYSpeed = e.valueData.value.getDouble());
+        inst.addListener(
+            maxTeleopAngularSpeedEntry,
+            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
+            e -> maxTeleopAngularSpeed = e.valueData.value.getDouble());
 
         // Configure the trigger bindings
         configureBindings();
@@ -122,9 +163,10 @@ public class RobotContainer {
         // Therefore, we must negate the left joystick's X direction.
         swerveDrive.setDefaultCommand(
             new RunCommand(() -> swerveDrive.drive(
-                inputDevice.getVerticalSpeed(),
-                inputDevice.getHorizontalSpeed(),
-                inputDevice.getAngularSpeed()),
+                inputDevice.getVerticalSpeed() * maxTeleopXSpeed,
+                inputDevice.getHorizontalSpeed() * maxTeleopYSpeed,
+                inputDevice.getAngularSpeed() * maxTeleopAngularSpeed,
+                0.5d),
                 swerveDrive));
     }
 

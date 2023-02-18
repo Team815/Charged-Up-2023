@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 
 import java.util.EnumSet;
+import java.util.Map;
 
 /**
  * Add your docs here.
@@ -43,12 +44,30 @@ public class SwerveModule {
         maxLinearSpeed = 1d;
         maxAngularSpeed = 0.2d;
         var tab = Shuffleboard.getTab("SmartDashboard");
-        var layout = tab.getLayout("Swerve Modules", BuiltInLayouts.kList).withSize(2, 3);
-        maxLinearSpeedEntry = layout.add("Max Linear Speed", maxLinearSpeed).getEntry();
-        maxAngularSpeedEntry = layout.add("Max Angular Speed", maxAngularSpeed).getEntry();
-        maxLinearRateEntry = layout.add("Max Linear Rate", maxLinearRate).getEntry();
-        maxAngularRateEntry = layout.add("Max Angular Rate", maxAngularRate).getEntry();
-        angularPEntry = layout.add("Angular P", angularP).getEntry();
+        var layout = tab
+            .getLayout("Swerve Modules", BuiltInLayouts.kGrid)
+            .withSize(2, 2)
+            .withProperties(Map.of("Label position", "LEFT", "Number of columns", 1, "Number of rows", 5));
+        maxLinearSpeedEntry = layout
+            .add("Max Linear Speed", maxLinearSpeed)
+            .withPosition(0, 0)
+            .getEntry();
+        maxAngularSpeedEntry = layout
+            .add("Max Angular Speed", maxAngularSpeed)
+            .withPosition(0, 1)
+            .getEntry();
+        maxLinearRateEntry = layout
+            .add("Max Linear Rate", maxLinearRate)
+            .withPosition(0, 2)
+            .getEntry();
+        maxAngularRateEntry = layout
+            .add("Max Angular Rate", maxAngularRate)
+            .withPosition(0, 3)
+            .getEntry();
+        angularPEntry = layout
+            .add("Angular P", angularP)
+            .withPosition(0, 4)
+            .getEntry();
     }
 
     public SwerveModule(int spinControllerID, int rotateControllerID, int rotateSensorID, double angularOffset) {
