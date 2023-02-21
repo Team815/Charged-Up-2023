@@ -28,6 +28,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import frc.robot.commands.DriveToCommand;
 import frc.robot.Limelight;
+import frc.robot.commands.LevelChargeStation;
 
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -164,11 +165,16 @@ public class SwerveDrive extends SubsystemBase {
 
     public CommandBase driveHeart() {
         return new InstantCommand(this::resetPose)
-            .andThen(new DriveToCommand(new Pose2d(40d, 0d, Rotation2d.fromDegrees(0d)), 0.15d, 0.5d, this));
+            .andThen(new DriveToCommand(new Pose2d(40d, 0d, Rotation2d.fromDegrees(0d)), 0.15d, 0.5d, this))
+            .andThen(new LevelChargeStation(this));
     }
 
     public void setAngle(double angle) {
         pidRotation.setSetpoint(angle);
+    }
+
+    public double getLevel() {
+        return gyro.getRoll();
     }
 
     public CommandBase myCommand() {
