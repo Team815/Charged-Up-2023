@@ -19,16 +19,16 @@ public class Limelight {
         networkTable = NetworkTableInstance.getDefault().getTable(instance);
     }
 
-    public NetworkTableEntry getX() {
-        return networkTable.getEntry("tx");
+    public double getX() {
+        return networkTable.getEntry("tx").getDouble(0);
     }
 
-    public NetworkTableEntry getY() {
-        return networkTable.getEntry("ty");
+    public double getY() {
+        return networkTable.getEntry("ty").getDouble(0);
     }
 
-    public NetworkTableEntry getVisible() {
-        return networkTable.getEntry("tv");
+    public boolean getVisible() {
+        return networkTable.getEntry("tv").getBoolean(false);
     }
 
     public void setPipeline(Alliance alliance) {

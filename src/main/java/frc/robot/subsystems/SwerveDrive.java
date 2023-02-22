@@ -123,9 +123,6 @@ public class SwerveDrive extends SubsystemBase {
             Rotation2d.fromDegrees(gyro.getYaw()),
             getSwerveModulePositions(modules));
         System.out.println(gyro.getRoll());
-
-//        System.out.println("Limelight X: " + Limelight.limelightField.getX());
-//        System.out.println("Limelight Y: " + Limelight.limelightField.getY());
     }
 
     public void drive(double speedX, double speedY, double rotation, double maxCorrectionSpeed) {
@@ -134,6 +131,8 @@ public class SwerveDrive extends SubsystemBase {
         if (autoCorrectEnabled) {
             rotation = autoCorrectRotation(rotation, yaw, maxCorrectionSpeed);
         }
+        System.out.println("Limelight X: " + Limelight.limelightField.getX());
+        System.out.println("Yaw: " + yaw);
 
         var speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
             new ChassisSpeeds(speedX, speedY, rotation),
@@ -211,6 +210,7 @@ public class SwerveDrive extends SubsystemBase {
         } else {
             rotation = MathUtil.clamp(-pidRotation.calculate(yaw), -limit, limit);
         }
+        System.out.println(yaw);
         return rotation;
     }
 
