@@ -152,6 +152,7 @@ public class RobotContainer {
      */
     private void configureBindings() {
         inputDevice.resetHeading().onTrue(new InstantCommand(swerveDrive::resetGyro));
+        inputDevice.toggleLimelightTarget().onTrue(new InstantCommand(swerveDrive::toggleLimelightTarget));
 
 
         // The robot assumes positive vertical direction is forward,

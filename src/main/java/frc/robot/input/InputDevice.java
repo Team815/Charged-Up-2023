@@ -10,4 +10,6 @@ public interface InputDevice {
     double getAngularSpeed();
 
     Trigger resetHeading();
+
+    Trigger toggleLimelightTarget();
 }

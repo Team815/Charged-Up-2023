@@ -1,6 +1,5 @@
 package frc.robot.commands;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.SwerveDrive;
 
@@ -9,31 +8,29 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class LevelChargeStation extends CommandBase {
 
-    private final int QueueCapacity = 10;
     private final SwerveDrive swerveDrive;
-    private final Queue<Double> levels;
+    private final DoubleQueue levels;
 
     public LevelChargeStation(SwerveDrive swerveDrive) {
         super();
+        final int queueCapacity = 10;
         this.swerveDrive = swerveDrive;
-        levels = new LinkedBlockingQueue<>(QueueCapacity);
+        levels = new DoubleQueue(queueCapacity);
         addRequirements(swerveDrive);
     }
 
     @Override
     public void execute() {
+        final var threshold = 8d;
         var level = swerveDrive.getLevel();
-        if (levels.size() == QueueCapacity) {
-            var speed = Math.abs(level) < 8d ? 0d : 0.1d * -Math.signum(level);
+        if (levels.isFull()) {
+            var range = levels.range();
+            var largestLevel = Math.abs(range.getFirst()) > Math.abs(range.getSecond()) ? range.getFirst() : range.getSecond();
+            var speed = range.getSecond() - range.getFirst() > 2 ? 0d :
+                Math.abs(largestLevel) < threshold ? 0d :
+                    0.1d * -Math.signum(largestLevel);
             swerveDrive.drive(speed, 0d, 0d, 0.5d);
         }
-        addToQueue(levels, level);
-    }
-
-    private static void addToQueue(Queue<Double> queue, double newEntry) {
-        if (!queue.offer(newEntry)) {
-            queue.remove();
-            queue.add(newEntry);
-        }
+        levels.add(level);
     }
 }

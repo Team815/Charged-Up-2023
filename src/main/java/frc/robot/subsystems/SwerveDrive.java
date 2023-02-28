@@ -26,8 +26,8 @@ import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
+import frc.robot.GamePieceLimelight;
 import frc.robot.commands.DriveToCommand;
-import frc.robot.Limelight;
 import frc.robot.commands.LevelChargeStation;
 
 import java.util.Arrays;
@@ -49,6 +49,7 @@ public class SwerveDrive extends SubsystemBase {
     private final PIDController pidRotation;
     private double previousRotation;
     private final Timer timer;
+    private final GamePieceLimelight limelight;
 
     static {
         autoCorrectEnabled = true;
@@ -98,6 +99,7 @@ public class SwerveDrive extends SubsystemBase {
             Rotation2d.fromDegrees(gyro.getYaw()),
             getSwerveModulePositions(modules));
         timer = new Timer();
+        limelight = new GamePieceLimelight("limelight-field");
 
         // Shuffleboard listeners
 
@@ -122,7 +124,7 @@ public class SwerveDrive extends SubsystemBase {
         pose = odometry.update(
             Rotation2d.fromDegrees(gyro.getYaw()),
             getSwerveModulePositions(modules));
-        System.out.println(gyro.getRoll());
+        System.out.printf("%.0f: %.1f\n", limelight.getPipeline(), limelight.getHorizontalOffset());
     }
 
     public void drive(double speedX, double speedY, double rotation, double maxCorrectionSpeed) {
@@ -131,8 +133,6 @@ public class SwerveDrive extends SubsystemBase {
         if (autoCorrectEnabled) {
             rotation = autoCorrectRotation(rotation, yaw, maxCorrectionSpeed);
         }
-        System.out.println("Limelight X: " + Limelight.limelightField.getX());
-        System.out.println("Yaw: " + yaw);
 
         var speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
             new ChassisSpeeds(speedX, speedY, rotation),
@@ -176,6 +176,10 @@ public class SwerveDrive extends SubsystemBase {
         return gyro.getRoll();
     }
 
+    public void toggleLimelightTarget() {
+        limelight.toggleTarget();
+    }
+
     public CommandBase myCommand() {
         var config = new TrajectoryConfig(0.5d, 1d).setKinematics(kinematics);
 
@@ -210,7 +214,6 @@ public class SwerveDrive extends SubsystemBase {
         } else {
             rotation = MathUtil.clamp(-pidRotation.calculate(yaw), -limit, limit);
         }
-        System.out.println(yaw);
         return rotation;
     }
 

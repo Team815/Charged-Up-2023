@@ -3,36 +3,43 @@ package frc.robot;
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 
-/** Add your docs here. */
+/**
+ * Add your docs here.
+ */
 public class Limelight {
+    private final NetworkTableEntry horizontalOffsetEntry;
+    private final NetworkTableEntry verticalOffsetEntry;
+    private final NetworkTableEntry visibleEntry;
+    private final NetworkTableEntry pipelineEntry;
 
-    public static final Limelight limelightField = new Limelight("limelight-field");
-
-    private final NetworkTable networkTable;
-
-    private Limelight(String instance) {
-        networkTable = NetworkTableInstance.getDefault().getTable(instance);
+    public Limelight(String instance) {
+        var networkTable = NetworkTableInstance.getDefault().getTable(instance);
+        horizontalOffsetEntry = networkTable.getEntry("tx");
+        verticalOffsetEntry = networkTable.getEntry("ty");
+        visibleEntry = networkTable.getEntry("tv");
+        pipelineEntry = networkTable.getEntry("pipeline");
     }
 
-    public double getX() {
-        return networkTable.getEntry("tx").getDouble(0);
+    public double getHorizontalOffset() {
+        return horizontalOffsetEntry.getValue().getDouble();
     }
 
-    public double getY() {
-        return networkTable.getEntry("ty").getDouble(0);
+    public double getVerticalOffset() {
+        return verticalOffsetEntry.getValue().getDouble();
     }
 
     public boolean getVisible() {
-        return networkTable.getEntry("tv").getBoolean(false);
+        return visibleEntry.getValue().getBoolean();
     }
 
-    public void setPipeline(Alliance alliance) {
-        //int id = alliance == Alliance.Blue ? 0 : 1;
-        //networkTable.getEntry("pipeline").setNumber(id);
+    public void setPipeline(int pipeline) {
+        pipelineEntry.setNumber(pipeline);
+    }
+
+    public double getPipeline() {
+        return pipelineEntry.getValue().getDouble();
     }
 }
