@@ -68,6 +68,10 @@ public class RobotContainer {
             .add("Max Angular Speed", maxTeleopAngularSpeed)
             .withPosition(0, 3)
             .getEntry();
+
+        layout
+            .addString("Limelight Toggle", GamePieceLimelight.currentTarget)
+            .withPosition(0, 4);
     }
 
     /**

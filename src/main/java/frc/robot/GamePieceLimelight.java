@@ -1,5 +1,7 @@
 package frc.robot;
 
+import java.util.function.Supplier;
+
 public class GamePieceLimelight extends Limelight {
 
     public enum Target {
@@ -14,11 +16,11 @@ public class GamePieceLimelight extends Limelight {
         }
     }
 
-    Target target;
+    static Target target = Target.Cone;
+    public static Supplier<String> currentTarget = () -> target.toString();
 
     public GamePieceLimelight(String instance) {
         super(instance);
-        target = Target.Cone;
         setPipeline(target.pipeline);
     }
 
@@ -27,5 +29,6 @@ public class GamePieceLimelight extends Limelight {
             target == Target.Cone ? Target.ConeNode :
                 Target.Cube;
         setPipeline(target.pipeline);
+        currentTarget = () -> target.toString();
     }
 }
