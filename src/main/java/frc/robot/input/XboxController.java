@@ -35,4 +35,9 @@ public class XboxController extends CommandXboxController implements InputDevice
     public Trigger toggleLimelightTarget() {
         return leftBumper();
     }
+
+    @Override
+    public Trigger centerOnTarget() {
+        return rightBumper();
+    }
 }

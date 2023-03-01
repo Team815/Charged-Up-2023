@@ -12,4 +12,5 @@ public interface InputDevice {
     Trigger resetHeading();
 
     Trigger toggleLimelightTarget();
+    Trigger centerOnTarget();
 }

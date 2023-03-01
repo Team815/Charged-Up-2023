@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import frc.robot.commands.CenterOnTarget;
 import frc.robot.input.InputDevice;
 import frc.robot.input.Joystick;
 import frc.robot.input.XboxController;
@@ -41,6 +42,7 @@ public class RobotContainer {
     private static final GenericEntry maxTeleopAngularSpeedEntry;
 
     private final SwerveDrive swerveDrive;
+    private final GamePieceLimelight limelight;
 
     static {
         maxTeleopXSpeed = 1d;
@@ -68,10 +70,6 @@ public class RobotContainer {
             .add("Max Angular Speed", maxTeleopAngularSpeed)
             .withPosition(0, 3)
             .getEntry();
-
-        layout
-            .addString("Limelight Toggle", GamePieceLimelight.currentTarget)
-            .withPosition(0, 4);
     }
 
     /**
@@ -118,6 +116,7 @@ public class RobotContainer {
                 backRightRotateSensorId,
                 backRightAngularOffset));
 
+        limelight = new GamePieceLimelight("limelight-field");
         inputDevice = new XboxController();
 
         var inst = NetworkTableInstance.getDefault();
@@ -156,7 +155,12 @@ public class RobotContainer {
      */
     private void configureBindings() {
         inputDevice.resetHeading().onTrue(new InstantCommand(swerveDrive::resetGyro));
-        inputDevice.toggleLimelightTarget().onTrue(new InstantCommand(swerveDrive::toggleLimelightTarget));
+        inputDevice.toggleLimelightTarget().onTrue(new InstantCommand(limelight::toggleTarget));
+        inputDevice.centerOnTarget().whileTrue(new CenterOnTarget(
+            swerveDrive,
+            limelight::getHorizontalOffset,
+            () -> inputDevice.getVerticalSpeed() * maxTeleopXSpeed,
+            () -> inputDevice.getHorizontalSpeed() * maxTeleopYSpeed));
 
 
         // The robot assumes positive vertical direction is forward,

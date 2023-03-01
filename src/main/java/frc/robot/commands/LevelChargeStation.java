@@ -3,9 +3,6 @@ package frc.robot.commands;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.SwerveDrive;
 
-import java.util.Queue;
-import java.util.concurrent.LinkedBlockingQueue;
-
 public class LevelChargeStation extends CommandBase {
 
     private final SwerveDrive swerveDrive;

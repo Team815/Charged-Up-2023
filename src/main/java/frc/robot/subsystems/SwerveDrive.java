@@ -26,7 +26,6 @@ import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
-import frc.robot.GamePieceLimelight;
 import frc.robot.commands.DriveToCommand;
 import frc.robot.commands.LevelChargeStation;
 
@@ -49,7 +48,6 @@ public class SwerveDrive extends SubsystemBase {
     private final PIDController pidRotation;
     private double previousRotation;
     private final Timer timer;
-    private final GamePieceLimelight limelight;
 
     static {
         autoCorrectEnabled = true;
@@ -99,7 +97,6 @@ public class SwerveDrive extends SubsystemBase {
             Rotation2d.fromDegrees(gyro.getYaw()),
             getSwerveModulePositions(modules));
         timer = new Timer();
-        limelight = new GamePieceLimelight("limelight-field");
 
         // Shuffleboard listeners
 
@@ -124,7 +121,6 @@ public class SwerveDrive extends SubsystemBase {
         pose = odometry.update(
             Rotation2d.fromDegrees(gyro.getYaw()),
             getSwerveModulePositions(modules));
-        System.out.printf("%.0f: %.1f\n", limelight.getPipeline(), limelight.getHorizontalOffset());
     }
 
     public void drive(double speedX, double speedY, double rotation, double maxCorrectionSpeed) {
@@ -174,10 +170,6 @@ public class SwerveDrive extends SubsystemBase {
 
     public double getLevel() {
         return gyro.getRoll();
-    }
-
-    public void toggleLimelightTarget() {
-        limelight.toggleTarget();
     }
 
     public CommandBase myCommand() {
