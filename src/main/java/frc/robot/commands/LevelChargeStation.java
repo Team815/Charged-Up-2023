@@ -10,7 +10,7 @@ public class LevelChargeStation extends CommandBase {
 
     public LevelChargeStation(SwerveDrive swerveDrive) {
         super();
-        final int queueCapacity = 10;
+        final int queueCapacity = 15;
         this.swerveDrive = swerveDrive;
         levels = new DoubleQueue(queueCapacity);
         addRequirements(swerveDrive);

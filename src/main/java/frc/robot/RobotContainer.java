@@ -126,6 +126,7 @@ public class RobotContainer {
             e -> {
                 var useXboxController = e.valueData.value.getBoolean();
                 inputDevice = useXboxController ? new XboxController() : new Joystick();
+                configureBindings();
             });
         inst.addListener(
             maxTeleopXSpeedEntry,
@@ -155,12 +156,13 @@ public class RobotContainer {
      */
     private void configureBindings() {
         inputDevice.resetHeading().onTrue(new InstantCommand(swerveDrive::resetGyro));
-        inputDevice.toggleLimelightTarget().onTrue(new InstantCommand(limelight::toggleTarget));
+        inputDevice.cycleLimelightTarget().onTrue(new InstantCommand(limelight::cycleTarget));
         inputDevice.centerOnTarget().whileTrue(new CenterOnTarget(
             swerveDrive,
             limelight::getHorizontalOffset,
             () -> inputDevice.getVerticalSpeed() * maxTeleopXSpeed,
-            () -> inputDevice.getHorizontalSpeed() * maxTeleopYSpeed));
+            () -> inputDevice.getHorizontalSpeed() * maxTeleopYSpeed,
+            limelight.getP()));
 
 
         // The robot assumes positive vertical direction is forward,
@@ -186,6 +188,6 @@ public class RobotContainer {
      */
     public Command getAutonomousCommand() {
         // An example command will be run in autonomous
-        return swerveDrive.driveHeart();
+        return swerveDrive.driveOntoChargeStation();
     }
 }

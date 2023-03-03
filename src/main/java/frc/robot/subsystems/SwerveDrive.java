@@ -77,6 +77,7 @@ public class SwerveDrive extends SubsystemBase {
         SwerveModule moduleBackLeft,
         SwerveModule moduleBackRight) {
         pidRotation = new PIDController(0.01d, 0d, 0d);
+        pidRotation.enableContinuousInput(0, 360);
         gyro = new Pigeon2(0);
         resetGyro();
         modules = new SwerveModule[]{
@@ -158,7 +159,7 @@ public class SwerveDrive extends SubsystemBase {
         return pose;
     }
 
-    public CommandBase driveHeart() {
+    public CommandBase driveOntoChargeStation() {
         return new InstantCommand(this::resetPose)
             .andThen(new DriveToCommand(new Pose2d(40d, 0d, Rotation2d.fromDegrees(0d)), 0.15d, 0.5d, this))
             .andThen(new LevelChargeStation(this));

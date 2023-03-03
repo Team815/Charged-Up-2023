@@ -18,18 +18,19 @@ public class CenterOnTarget extends CommandBase {
             SwerveDrive swerveDrive,
             DoubleSupplier targetOffsetSupplier,
             DoubleSupplier speedXSupplier,
-            DoubleSupplier speedYSupplier) {
+            DoubleSupplier speedYSupplier,
+            double p) {
         this.swerveDrive = swerveDrive;
         this.targetOffsetSupplier = targetOffsetSupplier;
         this.speedXSupplier = speedXSupplier;
         this.speedYSupplier = speedYSupplier;
-        pid = new PIDController(0.01d, 0d, 0d);
+        pid = new PIDController(p, 0d, 0d);
         addRequirements(swerveDrive);
     }
 
     @Override
     public void execute() {
-        var rotation = pid.calculate(targetOffsetSupplier.getAsDouble());
+        var rotation = -pid.calculate(targetOffsetSupplier.getAsDouble());
         swerveDrive.drive(speedXSupplier.getAsDouble(), speedYSupplier.getAsDouble(), rotation, 0.5);
     }
 }

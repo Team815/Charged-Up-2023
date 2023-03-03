@@ -32,7 +32,7 @@ public class XboxController extends CommandXboxController implements InputDevice
     }
 
     @Override
-    public Trigger toggleLimelightTarget() {
+    public Trigger cycleLimelightTarget() {
         return leftBumper();
     }
 

@@ -28,16 +28,16 @@ public class Joystick extends CommandJoystick implements InputDevice {
 
     @Override
     public Trigger resetHeading() {
-        return button(7);
+        return button(11);
     }
 
     @Override
-    public Trigger toggleLimelightTarget() {
-        return null;
+    public Trigger cycleLimelightTarget() {
+        return button(2);
     }
 
     @Override
     public Trigger centerOnTarget() {
-        return null;
+        return button(1);
     }
 }
