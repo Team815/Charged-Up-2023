@@ -38,25 +38,31 @@ import java.util.stream.IntStream;
 public class SwerveDrive extends SubsystemBase {
     private static boolean autoCorrectEnabled;
     private static double autoCorrectDelay;
+    private static double maxLinearAcceleration;
+    private static double maxAngularAccerlation;
+    private ChassisSpeeds currentSpeeds = new ChassisSpeeds();
     private static final GenericEntry autoCorrectEnabledEntry;
     private static final GenericEntry autoCorrectDelayEntry;
+    private static final GenericEntry maxLinearAccelerationEntry;
+    private static final GenericEntry maxAngularAccelerationEntry;
     private final Pigeon2 gyro;
     private final SwerveModule[] modules;
     private final SwerveDriveKinematics kinematics;
     private final SwerveDriveOdometry odometry;
     private Pose2d pose;
     private final PIDController pidRotation;
-    private double previousRotation;
     private final Timer timer;
 
     static {
         autoCorrectEnabled = true;
         autoCorrectDelay = 0.2d;
+        maxLinearAcceleration = 0.03d;
+        maxAngularAccerlation = 0.03d;
         var tab = Shuffleboard.getTab("SmartDashboard");
         var layout = tab
             .getLayout("Swerve Drive", BuiltInLayouts.kGrid)
-            .withSize(2, 1)
-            .withProperties(Map.of("Label position", "LEFT", "Number of columns", 1, "Number of rows", 2));
+            .withSize(2, 2)
+            .withProperties(Map.of("Label position", "LEFT", "Number of columns", 1, "Number of rows", 4));
         autoCorrectEnabledEntry = layout
             .add("Auto Correct", autoCorrectEnabled)
             .withWidget(BuiltInWidgets.kToggleSwitch)
@@ -65,6 +71,14 @@ public class SwerveDrive extends SubsystemBase {
         autoCorrectDelayEntry = layout
             .add("Auto Correct Delay", autoCorrectDelay)
             .withPosition(0, 1)
+            .getEntry();
+        maxLinearAccelerationEntry = layout
+            .add("Max Linear Acceleration", maxLinearAcceleration)
+            .withPosition(0, 2)
+            .getEntry();
+        maxAngularAccelerationEntry = layout
+            .add("Max Angular Acceleration", maxAngularAccerlation)
+            .withPosition(0, 3)
             .getEntry();
     }
 
@@ -77,7 +91,7 @@ public class SwerveDrive extends SubsystemBase {
         SwerveModule moduleBackLeft,
         SwerveModule moduleBackRight) {
         pidRotation = new PIDController(0.01d, 0d, 0d);
-        pidRotation.enableContinuousInput(0, 360);
+        pidRotation.enableContinuousInput(0d, 360d);
         gyro = new Pigeon2(0);
         resetGyro();
         modules = new SwerveModule[]{
@@ -115,6 +129,14 @@ public class SwerveDrive extends SubsystemBase {
             autoCorrectDelayEntry,
             EnumSet.of(NetworkTableEvent.Kind.kValueAll),
             e -> autoCorrectDelay = e.valueData.value.getDouble());
+        inst.addListener(
+            maxLinearAccelerationEntry,
+            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
+            e -> maxLinearAcceleration = e.valueData.value.getDouble());
+        inst.addListener(
+            maxAngularAccelerationEntry,
+            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
+            e -> maxAngularAccerlation = e.valueData.value.getDouble());
     }
 
     @Override
@@ -127,15 +149,22 @@ public class SwerveDrive extends SubsystemBase {
     public void drive(double speedX, double speedY, double rotation, double maxCorrectionSpeed) {
         var yaw = gyro.getYaw();
 
-        if (autoCorrectEnabled) {
-            rotation = autoCorrectRotation(rotation, yaw, maxCorrectionSpeed);
-        }
-
-        var speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+        var targetSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
             new ChassisSpeeds(speedX, speedY, rotation),
             Rotation2d.fromDegrees(yaw));
 
-        var states = kinematics.toSwerveModuleStates(speeds);
+        var nextRotation = getNextSpeed(currentSpeeds.omegaRadiansPerSecond, targetSpeeds.omegaRadiansPerSecond, maxAngularAccerlation);
+
+        if (autoCorrectEnabled) {
+            nextRotation = autoCorrectRotation(nextRotation, yaw, maxCorrectionSpeed);
+        }
+
+        currentSpeeds = new ChassisSpeeds(
+            getNextSpeed(currentSpeeds.vxMetersPerSecond, targetSpeeds.vxMetersPerSecond, maxLinearAcceleration),
+            getNextSpeed(currentSpeeds.vyMetersPerSecond, targetSpeeds.vyMetersPerSecond, maxLinearAcceleration),
+            nextRotation);
+
+        var states = kinematics.toSwerveModuleStates(currentSpeeds);
 
         IntStream
             .range(0, modules.length)
@@ -198,8 +227,7 @@ public class SwerveDrive extends SubsystemBase {
     }
 
     private double autoCorrectRotation(double rotation, double yaw, double limit) {
-        var stoppedRotating = rotation == 0d && previousRotation != 0d;
-        previousRotation = rotation;
+        var stoppedRotating = rotation == 0d && currentSpeeds.omegaRadiansPerSecond != 0d;
         if (stoppedRotating) {
             timer.start(autoCorrectDelay);
         } else if (rotation != 0d || timer.isRunning()) {
@@ -215,5 +243,10 @@ public class SwerveDrive extends SubsystemBase {
             .stream(modules)
             .map(SwerveModule::getPosition)
             .toArray(SwerveModulePosition[]::new);
+    }
+
+    private static double getNextSpeed(double currentSpeed, double targetSpeed, double maxAcceleration) {
+        var difference = targetSpeed - currentSpeed;
+        return currentSpeed + Math.min(maxAcceleration, Math.abs(difference)) * Math.signum(difference);
     }
 }

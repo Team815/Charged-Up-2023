@@ -89,10 +89,10 @@ public class RobotContainer {
         final var frontRightRotateSensorId = 10;
         final var backLeftRotateSensorId = 11;
         final var backRightRotateSensorId = 12;
-        final var frontLeftAngularOffset = -140d;
-        final var frontRightAngularOffset = 72d;
-        final var backLeftAngularOffset = 98d;
-        final var backRightAngularOffset = 171.5d;
+        final var frontLeftAngularOffset = -169d;
+        final var frontRightAngularOffset = 161.5d;
+        final var backLeftAngularOffset = -146.5d;
+        final var backRightAngularOffset = -11.5d;
 
         swerveDrive = new SwerveDrive(
             new SwerveModule(
