@@ -40,4 +40,9 @@ public class Joystick extends CommandJoystick implements InputDevice {
     public Trigger centerOnTarget() {
         return button(1);
     }
+
+    @Override
+    public Trigger openClaw() {
+        return null;
+    }
 }

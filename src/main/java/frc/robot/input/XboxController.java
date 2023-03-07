@@ -40,4 +40,9 @@ public class XboxController extends CommandXboxController implements InputDevice
     public Trigger centerOnTarget() {
         return rightBumper();
     }
+
+    @Override
+    public Trigger openClaw() {
+        return a();
+    }
 }

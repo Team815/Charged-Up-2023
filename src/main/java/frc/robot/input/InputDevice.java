@@ -12,5 +12,8 @@ public interface InputDevice {
     Trigger resetHeading();
 
     Trigger cycleLimelightTarget();
+
     Trigger centerOnTarget();
+
+    Trigger openClaw();
 }

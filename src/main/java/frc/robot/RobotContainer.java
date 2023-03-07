@@ -7,14 +7,19 @@ package frc.robot;
 import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.networktables.NetworkTableEvent;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.Compressor;
+import edu.wpi.first.wpilibj.PneumaticsModuleType;
+import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import frc.robot.commands.CenterOnTarget;
 import frc.robot.input.InputDevice;
 import frc.robot.input.Joystick;
 import frc.robot.input.XboxController;
+import frc.robot.subsystems.Claw;
 import frc.robot.subsystems.SwerveDrive;
 import frc.robot.subsystems.SwerveModule;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -42,6 +47,7 @@ public class RobotContainer {
     private static final GenericEntry maxTeleopAngularSpeedEntry;
 
     private final SwerveDrive swerveDrive;
+    private final Claw claw;
     private final GamePieceLimelight limelight;
 
     static {
@@ -116,6 +122,14 @@ public class RobotContainer {
                 backRightRotateSensorId,
                 backRightAngularOffset));
 
+        final var compressorPort = 30;
+        final var solenoidChannel = 0;
+
+        claw = new Claw(
+            new Compressor(compressorPort, PneumaticsModuleType.CTREPCM),
+            new Solenoid(compressorPort, PneumaticsModuleType.CTREPCM, solenoidChannel)
+        );
+
         limelight = new GamePieceLimelight("limelight-field");
         inputDevice = new XboxController();
 
@@ -163,6 +177,11 @@ public class RobotContainer {
             () -> inputDevice.getVerticalSpeed() * maxTeleopXSpeed,
             () -> inputDevice.getHorizontalSpeed() * maxTeleopYSpeed,
             limelight.getP()));
+        inputDevice.openClaw().whileTrue(new StartEndCommand(
+            claw::open,
+            claw::close,
+            claw
+        ));
 
 
         // The robot assumes positive vertical direction is forward,

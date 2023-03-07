@@ -31,7 +31,7 @@ public class GamePieceLimelight extends Limelight {
 
     public GamePieceLimelight(String instance) {
         super(instance);
-        p = 0.02d;
+        p = 0.01d;
         setPipeline(target.pipeline);
         var tab = Shuffleboard.getTab("SmartDashboard");
         var layout = tab
