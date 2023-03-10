@@ -27,6 +27,7 @@ public class DriveToCommand extends CommandBase {
 
     @Override
     public void initialize() {
+        System.out.println("Initialing");
         swerveDrive.setAngle(target.getRotation().getDegrees());
     }
 

@@ -169,7 +169,7 @@ public class RobotContainer {
      * joysticks}.
      */
     private void configureBindings() {
-        inputDevice.resetHeading().onTrue(new InstantCommand(swerveDrive::resetGyro));
+        inputDevice.resetHeading().onTrue(new InstantCommand(() -> swerveDrive.resetGyro(0)));
         inputDevice.cycleLimelightTarget().onTrue(new InstantCommand(limelight::cycleTarget));
         inputDevice.centerOnTarget().whileTrue(new CenterOnTarget(
             swerveDrive,
@@ -207,6 +207,6 @@ public class RobotContainer {
      */
     public Command getAutonomousCommand() {
         // An example command will be run in autonomous
-        return swerveDrive.driveOntoChargeStation();
+        return swerveDrive.auton1();
     }
 }

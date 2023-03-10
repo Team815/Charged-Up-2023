@@ -55,7 +55,7 @@ public class SwerveDrive extends SubsystemBase {
 
     static {
         autoCorrectEnabled = true;
-        autoCorrectDelay = 0.2d;
+        autoCorrectDelay = 0.4d;
         maxLinearAcceleration = 0.03d;
         maxAngularAccerlation = 0.03d;
         var tab = Shuffleboard.getTab("SmartDashboard");
@@ -93,7 +93,7 @@ public class SwerveDrive extends SubsystemBase {
         pidRotation = new PIDController(0.01d, 0d, 0d);
         pidRotation.enableContinuousInput(0d, 360d);
         gyro = new Pigeon2(0);
-        resetGyro();
+        resetGyro(0d);
         modules = new SwerveModule[]{
             moduleFrontLeft,
             moduleFrontRight,
@@ -146,25 +146,35 @@ public class SwerveDrive extends SubsystemBase {
             getSwerveModulePositions(modules));
     }
 
-    public void drive(double speedX, double speedY, double rotation, double maxCorrectionSpeed) {
+    public void drive(double xSpeed, double ySpeed, double angularSpeed, double maxCorrectionSpeed) {
         var yaw = gyro.getYaw();
 
         var targetSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-            new ChassisSpeeds(speedX, speedY, rotation),
+            new ChassisSpeeds(xSpeed, ySpeed, angularSpeed),
             Rotation2d.fromDegrees(yaw));
 
-        var nextRotation = getNextSpeed(currentSpeeds.omegaRadiansPerSecond, targetSpeeds.omegaRadiansPerSecond, maxAngularAccerlation);
+        var nextAngularSpeed = getNextSpeed(
+            currentSpeeds.omegaRadiansPerSecond,
+            targetSpeeds.omegaRadiansPerSecond,
+            maxAngularAccerlation);
 
-        if (autoCorrectEnabled) {
-            nextRotation = autoCorrectRotation(nextRotation, yaw, maxCorrectionSpeed);
-        }
+        var autoCorrect = autoCorrectEnabled ? autoCorrectRotation(
+                currentSpeeds.omegaRadiansPerSecond,
+                nextAngularSpeed,
+                yaw,
+                maxCorrectionSpeed) : 0d;
 
         currentSpeeds = new ChassisSpeeds(
             getNextSpeed(currentSpeeds.vxMetersPerSecond, targetSpeeds.vxMetersPerSecond, maxLinearAcceleration),
             getNextSpeed(currentSpeeds.vyMetersPerSecond, targetSpeeds.vyMetersPerSecond, maxLinearAcceleration),
-            nextRotation);
+            nextAngularSpeed);
 
-        var states = kinematics.toSwerveModuleStates(currentSpeeds);
+        var autoCorrectSpeeds = new ChassisSpeeds(
+            currentSpeeds.vxMetersPerSecond,
+            currentSpeeds.vyMetersPerSecond,
+            currentSpeeds.omegaRadiansPerSecond + autoCorrect);
+
+        var states = kinematics.toSwerveModuleStates(autoCorrectSpeeds);
 
         IntStream
             .range(0, modules.length)
@@ -173,8 +183,8 @@ public class SwerveDrive extends SubsystemBase {
             .forEach(pair -> pair.getFirst().drive(pair.getSecond()));
     }
 
-    public void resetGyro() {
-        gyro.setYaw(0d);
+    public void resetGyro(double offset) {
+        gyro.setYaw(0d + offset);
         pidRotation.setSetpoint(0d);
     }
 
@@ -190,7 +200,42 @@ public class SwerveDrive extends SubsystemBase {
 
     public CommandBase driveOntoChargeStation() {
         return new InstantCommand(this::resetPose)
-            .andThen(new DriveToCommand(new Pose2d(40d, 0d, Rotation2d.fromDegrees(0d)), 0.15d, 0.5d, this))
+            .andThen(new DriveToCommand(
+                new Pose2d(40d, 0d, Rotation2d.fromDegrees(0d)),
+                0.15d,
+                0.5d,
+                this))
+            .andThen(new LevelChargeStation(this));
+    }
+
+    public CommandBase auton1(){
+        return new InstantCommand(this::resetPose)
+            .andThen(new InstantCommand(() -> this.resetGyro(180d)))
+            .andThen(new DriveToCommand(
+                new Pose2d(-10d, 0d, Rotation2d.fromDegrees(180d)),
+                0.2d,
+                0.2d,
+                this))
+            .andThen(new DriveToCommand(
+                new Pose2d(40d, 0d, Rotation2d.fromDegrees(0d)),
+                0.4d,
+                0.5d,
+                this))
+            .andThen(new DriveToCommand(
+                new Pose2d(80d, 0d, Rotation2d.fromDegrees(0d)),
+                0.4d,
+                0.5d,
+                this))
+            .andThen(new DriveToCommand(
+                new Pose2d(80d, 45d, Rotation2d.fromDegrees(180d)),
+                0.4d,
+                0.5d,
+                this))
+            .andThen(new DriveToCommand(
+                new Pose2d(40d, 45d, Rotation2d.fromDegrees(180d)),
+                0.2d,
+                0.5d,
+                this))
             .andThen(new LevelChargeStation(this));
     }
 
@@ -199,7 +244,7 @@ public class SwerveDrive extends SubsystemBase {
     }
 
     public double getLevel() {
-        return gyro.getRoll();
+        return gyro.getPitch();
     }
 
     public CommandBase myCommand() {
@@ -226,16 +271,20 @@ public class SwerveDrive extends SubsystemBase {
             this);
     }
 
-    private double autoCorrectRotation(double rotation, double yaw, double limit) {
-        var stoppedRotating = rotation == 0d && currentSpeeds.omegaRadiansPerSecond != 0d;
+    private double autoCorrectRotation(
+        double currentAngularSpeed,
+        double nextAngularSpeed,
+        double yaw,
+        double limit) {
+        var stoppedRotating = nextAngularSpeed == 0d && currentAngularSpeed != 0d;
         if (stoppedRotating) {
             timer.start(autoCorrectDelay);
-        } else if (rotation != 0d || timer.isRunning()) {
+        } else if (currentAngularSpeed != 0d || timer.isRunning()) {
             setAngle(yaw);
         } else {
-            rotation = MathUtil.clamp(-pidRotation.calculate(yaw), -limit, limit);
+            return MathUtil.clamp(-pidRotation.calculate(yaw), -limit, limit);
         }
-        return rotation;
+        return 0d;
     }
 
     private static SwerveModulePosition[] getSwerveModulePositions(SwerveModule[] modules) {
