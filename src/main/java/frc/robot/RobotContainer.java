@@ -188,6 +188,6 @@ public class RobotContainer {
      */
     public Command getAutonomousCommand() {
         // An example command will be run in autonomous
-        return swerveDrive.auton1_testbot();
+        return swerveDrive.auton1();
     }
 }

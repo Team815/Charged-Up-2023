@@ -208,37 +208,6 @@ public class SwerveDrive extends SubsystemBase {
             .andThen(new LevelChargeStation(this));
     }
 
-    public CommandBase auton1_testbot(){
-        return new InstantCommand(this::resetPose)
-            .andThen(new InstantCommand(() -> this.resetGyro(180d)))
-             .andThen(new DriveToCommand(
-                 new Pose2d(-10d, 0d, Rotation2d.fromDegrees(180d)),
-                 0.2d,
-                 0.2d,
-                 this))
-              .andThen(new DriveToCommand(
-                  new Pose2d(40d, 0d, Rotation2d.fromDegrees(0d)),
-                  0.4d,
-                  0.5d,
-                  this))
-             .andThen(new DriveToCommand(
-                 new Pose2d(80d, 0d, Rotation2d.fromDegrees(0d)),
-                 0.4d,
-                 0.5d,
-                 this))
-             .andThen(new DriveToCommand(
-                 new Pose2d(80d, 85d, Rotation2d.fromDegrees(180d)),
-                 0.4d,
-                 0.5d,
-                 this))
-             .andThen(new DriveToCommand(
-                 new Pose2d(35d, 85d, Rotation2d.fromDegrees(180d)),
-                 0.2d,
-                 0.5d,
-                 this))
-             .andThen(new LevelChargeStation(this));
-    }
-
     public CommandBase auton1(){
         return new InstantCommand(this::resetPose)
             .andThen(new InstantCommand(() -> this.resetGyro(180d)))
@@ -258,12 +227,12 @@ public class SwerveDrive extends SubsystemBase {
                 0.5d,
                 this))
             .andThen(new DriveToCommand(
-                new Pose2d(80d, 45d, Rotation2d.fromDegrees(180d)),
+                new Pose2d(80d, 85d, Rotation2d.fromDegrees(180d)),
                 0.4d,
                 0.5d,
                 this))
             .andThen(new DriveToCommand(
-                new Pose2d(40d, 45d, Rotation2d.fromDegrees(180d)),
+                new Pose2d(40d, 85d, Rotation2d.fromDegrees(180d)),
                 0.2d,
                 0.5d,
                 this))
