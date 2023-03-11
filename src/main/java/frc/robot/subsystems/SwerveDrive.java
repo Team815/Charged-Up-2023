@@ -38,25 +38,31 @@ import java.util.stream.IntStream;
 public class SwerveDrive extends SubsystemBase {
     private static boolean autoCorrectEnabled;
     private static double autoCorrectDelay;
+    private static double maxLinearAcceleration;
+    private static double maxAngularAccerlation;
+    private ChassisSpeeds currentSpeeds = new ChassisSpeeds();
     private static final GenericEntry autoCorrectEnabledEntry;
     private static final GenericEntry autoCorrectDelayEntry;
+    private static final GenericEntry maxLinearAccelerationEntry;
+    private static final GenericEntry maxAngularAccelerationEntry;
     private final Pigeon2 gyro;
     private final SwerveModule[] modules;
     private final SwerveDriveKinematics kinematics;
     private final SwerveDriveOdometry odometry;
     private Pose2d pose;
     private final PIDController pidRotation;
-    private double previousRotation;
     private final Timer timer;
 
     static {
         autoCorrectEnabled = true;
-        autoCorrectDelay = 0.2d;
+        autoCorrectDelay = 0.4d;
+        maxLinearAcceleration = 0.03d;
+        maxAngularAccerlation = 0.03d;
         var tab = Shuffleboard.getTab("SmartDashboard");
         var layout = tab
             .getLayout("Swerve Drive", BuiltInLayouts.kGrid)
-            .withSize(2, 1)
-            .withProperties(Map.of("Label position", "LEFT", "Number of columns", 1, "Number of rows", 2));
+            .withSize(2, 2)
+            .withProperties(Map.of("Label position", "LEFT", "Number of columns", 1, "Number of rows", 4));
         autoCorrectEnabledEntry = layout
             .add("Auto Correct", autoCorrectEnabled)
             .withWidget(BuiltInWidgets.kToggleSwitch)
@@ -65,6 +71,14 @@ public class SwerveDrive extends SubsystemBase {
         autoCorrectDelayEntry = layout
             .add("Auto Correct Delay", autoCorrectDelay)
             .withPosition(0, 1)
+            .getEntry();
+        maxLinearAccelerationEntry = layout
+            .add("Max Linear Acceleration", maxLinearAcceleration)
+            .withPosition(0, 2)
+            .getEntry();
+        maxAngularAccelerationEntry = layout
+            .add("Max Angular Acceleration", maxAngularAccerlation)
+            .withPosition(0, 3)
             .getEntry();
     }
 
@@ -77,9 +91,9 @@ public class SwerveDrive extends SubsystemBase {
         SwerveModule moduleBackLeft,
         SwerveModule moduleBackRight) {
         pidRotation = new PIDController(0.01d, 0d, 0d);
-        pidRotation.enableContinuousInput(0, 360);
+        pidRotation.enableContinuousInput(0d, 360d);
         gyro = new Pigeon2(0);
-        resetGyro();
+        resetGyro(0d);
         modules = new SwerveModule[]{
             moduleFrontLeft,
             moduleFrontRight,
@@ -115,6 +129,14 @@ public class SwerveDrive extends SubsystemBase {
             autoCorrectDelayEntry,
             EnumSet.of(NetworkTableEvent.Kind.kValueAll),
             e -> autoCorrectDelay = e.valueData.value.getDouble());
+        inst.addListener(
+            maxLinearAccelerationEntry,
+            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
+            e -> maxLinearAcceleration = e.valueData.value.getDouble());
+        inst.addListener(
+            maxAngularAccelerationEntry,
+            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
+            e -> maxAngularAccerlation = e.valueData.value.getDouble());
     }
 
     @Override
@@ -124,18 +146,35 @@ public class SwerveDrive extends SubsystemBase {
             getSwerveModulePositions(modules));
     }
 
-    public void drive(double speedX, double speedY, double rotation, double maxCorrectionSpeed) {
+    public void drive(double xSpeed, double ySpeed, double angularSpeed, double maxCorrectionSpeed) {
         var yaw = gyro.getYaw();
 
-        if (autoCorrectEnabled) {
-            rotation = autoCorrectRotation(rotation, yaw, maxCorrectionSpeed);
-        }
-
-        var speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-            new ChassisSpeeds(speedX, speedY, rotation),
+        var targetSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+            new ChassisSpeeds(xSpeed, ySpeed, angularSpeed),
             Rotation2d.fromDegrees(yaw));
 
-        var states = kinematics.toSwerveModuleStates(speeds);
+        var nextAngularSpeed = getNextSpeed(
+            currentSpeeds.omegaRadiansPerSecond,
+            targetSpeeds.omegaRadiansPerSecond,
+            maxAngularAccerlation);
+
+        var autoCorrect = autoCorrectEnabled ? autoCorrectRotation(
+                currentSpeeds.omegaRadiansPerSecond,
+                nextAngularSpeed,
+                yaw,
+                maxCorrectionSpeed) : 0d;
+
+        currentSpeeds = new ChassisSpeeds(
+            getNextSpeed(currentSpeeds.vxMetersPerSecond, targetSpeeds.vxMetersPerSecond, maxLinearAcceleration),
+            getNextSpeed(currentSpeeds.vyMetersPerSecond, targetSpeeds.vyMetersPerSecond, maxLinearAcceleration),
+            nextAngularSpeed);
+
+        var autoCorrectSpeeds = new ChassisSpeeds(
+            currentSpeeds.vxMetersPerSecond,
+            currentSpeeds.vyMetersPerSecond,
+            currentSpeeds.omegaRadiansPerSecond + autoCorrect);
+
+        var states = kinematics.toSwerveModuleStates(autoCorrectSpeeds);
 
         IntStream
             .range(0, modules.length)
@@ -144,8 +183,8 @@ public class SwerveDrive extends SubsystemBase {
             .forEach(pair -> pair.getFirst().drive(pair.getSecond()));
     }
 
-    public void resetGyro() {
-        gyro.setYaw(0d);
+    public void resetGyro(double offset) {
+        gyro.setYaw(0d + offset);
         pidRotation.setSetpoint(0d);
     }
 
@@ -161,7 +200,73 @@ public class SwerveDrive extends SubsystemBase {
 
     public CommandBase driveOntoChargeStation() {
         return new InstantCommand(this::resetPose)
-            .andThen(new DriveToCommand(new Pose2d(40d, 0d, Rotation2d.fromDegrees(0d)), 0.15d, 0.5d, this))
+            .andThen(new DriveToCommand(
+                new Pose2d(40d, 0d, Rotation2d.fromDegrees(0d)),
+                0.15d,
+                0.5d,
+                this))
+            .andThen(new LevelChargeStation(this));
+    }
+
+    public CommandBase auton1_testbot(){
+        return new InstantCommand(this::resetPose)
+            .andThen(new InstantCommand(() -> this.resetGyro(180d)))
+             .andThen(new DriveToCommand(
+                 new Pose2d(-10d, 0d, Rotation2d.fromDegrees(180d)),
+                 0.2d,
+                 0.2d,
+                 this))
+              .andThen(new DriveToCommand(
+                  new Pose2d(40d, 0d, Rotation2d.fromDegrees(0d)),
+                  0.4d,
+                  0.5d,
+                  this))
+             .andThen(new DriveToCommand(
+                 new Pose2d(80d, 0d, Rotation2d.fromDegrees(0d)),
+                 0.4d,
+                 0.5d,
+                 this))
+             .andThen(new DriveToCommand(
+                 new Pose2d(80d, 85d, Rotation2d.fromDegrees(180d)),
+                 0.4d,
+                 0.5d,
+                 this))
+             .andThen(new DriveToCommand(
+                 new Pose2d(35d, 85d, Rotation2d.fromDegrees(180d)),
+                 0.2d,
+                 0.5d,
+                 this))
+             .andThen(new LevelChargeStation(this));
+    }
+
+    public CommandBase auton1(){
+        return new InstantCommand(this::resetPose)
+            .andThen(new InstantCommand(() -> this.resetGyro(180d)))
+            .andThen(new DriveToCommand(
+                new Pose2d(-10d, 0d, Rotation2d.fromDegrees(180d)),
+                0.2d,
+                0.2d,
+                this))
+            .andThen(new DriveToCommand(
+                new Pose2d(40d, 0d, Rotation2d.fromDegrees(0d)),
+                0.4d,
+                0.5d,
+                this))
+            .andThen(new DriveToCommand(
+                new Pose2d(80d, 0d, Rotation2d.fromDegrees(0d)),
+                0.4d,
+                0.5d,
+                this))
+            .andThen(new DriveToCommand(
+                new Pose2d(80d, 45d, Rotation2d.fromDegrees(180d)),
+                0.4d,
+                0.5d,
+                this))
+            .andThen(new DriveToCommand(
+                new Pose2d(40d, 45d, Rotation2d.fromDegrees(180d)),
+                0.2d,
+                0.5d,
+                this))
             .andThen(new LevelChargeStation(this));
     }
 
@@ -170,7 +275,7 @@ public class SwerveDrive extends SubsystemBase {
     }
 
     public double getLevel() {
-        return gyro.getRoll();
+        return gyro.getPitch();
     }
 
     public CommandBase myCommand() {
@@ -197,17 +302,20 @@ public class SwerveDrive extends SubsystemBase {
             this);
     }
 
-    private double autoCorrectRotation(double rotation, double yaw, double limit) {
-        var stoppedRotating = rotation == 0d && previousRotation != 0d;
-        previousRotation = rotation;
+    private double autoCorrectRotation(
+        double currentAngularSpeed,
+        double nextAngularSpeed,
+        double yaw,
+        double limit) {
+        var stoppedRotating = nextAngularSpeed == 0d && currentAngularSpeed != 0d;
         if (stoppedRotating) {
             timer.start(autoCorrectDelay);
-        } else if (rotation != 0d || timer.isRunning()) {
+        } else if (currentAngularSpeed != 0d || timer.isRunning()) {
             setAngle(yaw);
         } else {
-            rotation = MathUtil.clamp(-pidRotation.calculate(yaw), -limit, limit);
+            return MathUtil.clamp(-pidRotation.calculate(yaw), -limit, limit);
         }
-        return rotation;
+        return 0d;
     }
 
     private static SwerveModulePosition[] getSwerveModulePositions(SwerveModule[] modules) {
@@ -215,5 +323,10 @@ public class SwerveDrive extends SubsystemBase {
             .stream(modules)
             .map(SwerveModule::getPosition)
             .toArray(SwerveModulePosition[]::new);
+    }
+
+    private static double getNextSpeed(double currentSpeed, double targetSpeed, double maxAcceleration) {
+        var difference = targetSpeed - currentSpeed;
+        return currentSpeed + Math.min(maxAcceleration, Math.abs(difference)) * Math.signum(difference);
     }
 }

@@ -10,7 +10,7 @@ public class LevelChargeStation extends CommandBase {
 
     public LevelChargeStation(SwerveDrive swerveDrive) {
         super();
-        final int queueCapacity = 15;
+        final int queueCapacity = 10;
         this.swerveDrive = swerveDrive;
         levels = new DoubleQueue(queueCapacity);
         addRequirements(swerveDrive);
@@ -23,9 +23,9 @@ public class LevelChargeStation extends CommandBase {
         if (levels.isFull()) {
             var range = levels.range();
             var largestLevel = Math.abs(range.getFirst()) > Math.abs(range.getSecond()) ? range.getFirst() : range.getSecond();
-            var speed = range.getSecond() - range.getFirst() > 2 ? 0d :
+            var speed = range.getSecond() - range.getFirst() > 1 ? 0d :
                 Math.abs(largestLevel) < threshold ? 0d :
-                    0.1d * -Math.signum(largestLevel);
+                    0.06d * Math.signum(largestLevel);
             swerveDrive.drive(speed, 0d, 0d, 0.5d);
         }
         levels.add(level);
