@@ -19,6 +19,7 @@ import frc.robot.commands.CenterOnTarget;
 import frc.robot.input.InputDevice;
 import frc.robot.input.Joystick;
 import frc.robot.input.XboxController;
+import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Claw;
 import frc.robot.subsystems.SwerveDrive;
 import frc.robot.subsystems.SwerveModule;
@@ -49,6 +50,7 @@ public class RobotContainer {
     private final SwerveDrive swerveDrive;
     private final Claw claw;
     private final GamePieceLimelight limelight;
+    private final Arm arm;
 
     static {
         maxTeleopXSpeed = 1d;
@@ -132,6 +134,12 @@ public class RobotContainer {
 
         limelight = new GamePieceLimelight("limelight-field");
         inputDevice = new XboxController();
+
+        var verticalMotorMainId = 1;
+        var verticalMotorSecondaryId = 2;
+        var horizontalMotorId = 3;
+
+        arm = new Arm(verticalMotorMainId, verticalMotorSecondaryId, horizontalMotorId);
 
         var inst = NetworkTableInstance.getDefault();
         inst.addListener(

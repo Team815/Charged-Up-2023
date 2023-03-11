@@ -227,12 +227,12 @@ public class SwerveDrive extends SubsystemBase {
                 0.5d,
                 this))
             .andThen(new DriveToCommand(
-                new Pose2d(80d, 45d, Rotation2d.fromDegrees(180d)),
+                new Pose2d(80d, 85d, Rotation2d.fromDegrees(180d)),
                 0.4d,
                 0.5d,
                 this))
             .andThen(new DriveToCommand(
-                new Pose2d(40d, 45d, Rotation2d.fromDegrees(180d)),
+                new Pose2d(40d, 85d, Rotation2d.fromDegrees(180d)),
                 0.2d,
                 0.5d,
                 this))
