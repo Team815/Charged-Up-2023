@@ -177,20 +177,29 @@ public class RobotContainer {
      * joysticks}.
      */
     private void configureBindings() {
+        //Gyro
         inputDevice.resetHeading().onTrue(new InstantCommand(() -> swerveDrive.resetGyro(0)));
+
+        //Limelight
         inputDevice.cycleLimelightTarget().onTrue(new InstantCommand(limelight::cycleTarget));
+
+        //Center Target
         inputDevice.centerOnTarget().whileTrue(new CenterOnTarget(
             swerveDrive,
             limelight::getHorizontalOffset,
             () -> inputDevice.getVerticalSpeed() * maxTeleopXSpeed,
             () -> inputDevice.getHorizontalSpeed() * maxTeleopYSpeed,
             limelight.getP()));
+
+        //Claw
         inputDevice.openClaw().whileTrue(new StartEndCommand(
             claw::open,
             claw::close,
             claw
         ));
 
+        //Arm
+        configureArmBindings();
 
         // The robot assumes positive vertical direction is forward,
         // but the controller positive vertical direction is down (backward).
@@ -206,6 +215,29 @@ public class RobotContainer {
                 inputDevice.getAngularSpeed() * maxTeleopAngularSpeed,
                 0.5d),
                 swerveDrive));
+    }
+
+    private void configureArmBindings() {
+        inputDevice.setArmToTopCone().whileTrue(new StartEndCommand(
+            arm::setToTopCone,
+            arm::setToHome,
+            arm
+        ));
+        inputDevice.setArmToBottomCone().whileTrue(new StartEndCommand(
+            arm::setToBottomCone,
+            arm::setToHome,
+            arm
+        ));
+        inputDevice.setArmToStationPickup().whileTrue(new StartEndCommand(
+            arm::setToStationPickup,
+            arm::setToHome,
+            arm
+        ));
+        inputDevice.setArmToGroundPickup().whileTrue(new StartEndCommand(
+            arm::setToGroundPickup,
+            arm::setToHome,
+            arm
+        ));
     }
 
     /**
