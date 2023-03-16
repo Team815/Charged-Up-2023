@@ -45,4 +45,24 @@ public class XboxController extends CommandXboxController implements InputDevice
     public Trigger openClaw() {
         return a();
     }
+
+    @Override
+    public Trigger setArmToTopCone() {
+        return y();
+    }
+
+    @Override
+    public Trigger setArmToBottomCone() {
+        return b();
+    }
+
+    @Override
+    public Trigger setArmToStationPickup() {
+        return x();
+    }
+
+    @Override
+    public Trigger setArmToGroundPickup() {
+        return povLeft();
+    }
 }

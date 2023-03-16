@@ -18,7 +18,7 @@ public class LevelChargeStation extends CommandBase {
 
     @Override
     public void execute() {
-        final var threshold = 8d;
+        final var threshold = 5d;
         var level = swerveDrive.getLevel();
         if (levels.isFull()) {
             var range = levels.range();

@@ -45,4 +45,24 @@ public class Joystick extends CommandJoystick implements InputDevice {
     public Trigger openClaw() {
         return null;
     }
+
+    @Override
+    public Trigger setArmToTopCone() {
+        return povUp();
+    }
+
+    @Override
+    public Trigger setArmToBottomCone() {
+        return povDown();
+    }
+
+    @Override
+    public Trigger setArmToStationPickup() {
+        return povRight();
+    }
+
+    @Override
+    public Trigger setArmToGroundPickup() {
+        return povLeft();
+    }
 }

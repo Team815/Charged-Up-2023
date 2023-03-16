@@ -13,20 +13,20 @@ import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
-import edu.wpi.first.wpilibj2.command.RunCommand;
-import edu.wpi.first.wpilibj2.command.StartEndCommand;
-import frc.robot.commands.CenterOnTarget;
+import edu.wpi.first.wpilibj2.command.*;
+import frc.robot.commands.*;
 import frc.robot.input.InputDevice;
 import frc.robot.input.Joystick;
 import frc.robot.input.XboxController;
+import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Claw;
+import frc.robot.subsystems.Shoulder;
 import frc.robot.subsystems.SwerveDrive;
 import frc.robot.subsystems.SwerveModule;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
+import java.security.Key;
 import java.util.EnumSet;
 import java.util.Map;
 
@@ -49,6 +49,8 @@ public class RobotContainer {
     private final SwerveDrive swerveDrive;
     private final Claw claw;
     private final GamePieceLimelight limelight;
+    private final Arm arm;
+    private final Shoulder shoulder;
 
     static {
         maxTeleopXSpeed = 1d;
@@ -96,7 +98,7 @@ public class RobotContainer {
         final var backLeftRotateSensorId = 11;
         final var backRightRotateSensorId = 12;
         final var frontLeftAngularOffset = -169d;
-        final var frontRightAngularOffset = 161.5d;
+        final var frontRightAngularOffset = 112d;
         final var backLeftAngularOffset = -146.5d;
         final var backRightAngularOffset = -11.5d;
 
@@ -132,6 +134,13 @@ public class RobotContainer {
 
         limelight = new GamePieceLimelight("limelight-field");
         inputDevice = new XboxController();
+
+        var verticalMotorMainId = 9;
+        var verticalMotorSecondaryId = 10;
+        var horizontalMotorId = 3;
+
+        arm = new Arm(verticalMotorMainId, verticalMotorSecondaryId);
+        shoulder = new Shoulder(horizontalMotorId);
 
         var inst = NetworkTableInstance.getDefault();
         inst.addListener(
@@ -169,20 +178,44 @@ public class RobotContainer {
      * joysticks}.
      */
     private void configureBindings() {
+        //Gyro
         inputDevice.resetHeading().onTrue(new InstantCommand(() -> swerveDrive.resetGyro(0)));
+
+        //Limelight
         inputDevice.cycleLimelightTarget().onTrue(new InstantCommand(limelight::cycleTarget));
+
+        //Center Target
         inputDevice.centerOnTarget().whileTrue(new CenterOnTarget(
             swerveDrive,
             limelight::getHorizontalOffset,
             () -> inputDevice.getVerticalSpeed() * maxTeleopXSpeed,
             () -> inputDevice.getHorizontalSpeed() * maxTeleopYSpeed,
             limelight.getP()));
-        inputDevice.openClaw().whileTrue(new StartEndCommand(
-            claw::open,
-            claw::close,
-            claw
-        ));
 
+        //Claw
+        inputDevice.openClaw().whileTrue(
+            new MoveShoulder(shoulder, 17000)
+                .andThen(new InstantCommand(claw::open)));
+        inputDevice.openClaw().onFalse(
+            (new InstantCommand(claw::close)
+            .alongWith(new WaitCommand(0.5d)))
+                .andThen(new MoveShoulder(shoulder, 1000)
+                    .alongWith(new KeepArmAt(arm, 2d, 0.2d))));
+//        inputDevice.openClaw().whileTrue(new LiftArmTo(arm, 2)
+//            .deadlineWith(new MoveShoulder(shoulder, 8000))
+//            .andThen((new MoveShoulder(shoulder, 8000))
+//                .deadlineWith(new KeepArmAt(arm, 2)))
+//            .andThen((new KeepArmAt(arm, 2)).alongWith(new InstantCommand(claw::open, claw))));
+//        inputDevice.openClaw().onFalse(new InstantCommand(claw::close)
+//            .alongWith(new WaitCommand(0.5d)
+//                .andThen((new MoveShoulder(shoulder, 1000)
+//                    .alongWith(new DropArm(arm))))));
+
+        //inputDevice.setArmToTopCone().whileTrue(new MoveShoulder(shoulder, 18000d));
+        //inputDevice.setArmToTopCone().onFalse(new MoveShoulder(shoulder, 0d));
+
+        //Arm
+        configureArmBindings();
 
         // The robot assumes positive vertical direction is forward,
         // but the controller positive vertical direction is down (backward).
@@ -192,12 +225,46 @@ public class RobotContainer {
         // but the controller positive sideways direction is to the right.
         // Therefore, we must negate the left joystick's X direction.
         swerveDrive.setDefaultCommand(
-            new RunCommand(() -> swerveDrive.drive(
-                inputDevice.getVerticalSpeed() * maxTeleopXSpeed,
-                inputDevice.getHorizontalSpeed() * maxTeleopYSpeed,
-                inputDevice.getAngularSpeed() * maxTeleopAngularSpeed,
-                0.5d),
-                swerveDrive));
+            new InstantCommand(arm::zeroEncoder).andThen(
+                new RunCommand(() -> swerveDrive.drive(
+                    inputDevice.getVerticalSpeed() * maxTeleopXSpeed,
+                    inputDevice.getHorizontalSpeed() * maxTeleopYSpeed,
+                    inputDevice.getAngularSpeed() * maxTeleopAngularSpeed,
+                    0.5d),
+                    swerveDrive)));
+    }
+
+    private void configureArmBindings() {
+
+        inputDevice.setArmToTopCone().whileTrue(
+            new LiftArmTo(arm, 10d, 0.2d)
+                .andThen(new MoveShoulder(shoulder, 17000d)
+                    .alongWith(new KeepArmAt(arm, 10d, 0.2d))));
+
+        inputDevice.setArmToTopCone().onFalse(
+            (new WaitCommand(0.5d)
+                .deadlineWith(new InstantCommand(claw::open), new KeepArmAt(arm, 10d, 0.2d)))
+                .andThen(new MoveShoulder(shoulder, 200d)
+                    .deadlineWith(new InstantCommand(claw::close), new KeepArmAt(arm, 10d, 0.2d)))
+                .andThen(new DropArm(arm)));
+
+        inputDevice.setArmToBottomCone().whileTrue(
+            new LiftArmTo(arm, 8.5d, 0.2d)
+                .andThen(new MoveShoulder(shoulder, 2000d)
+                    .alongWith(new KeepArmAt(arm, 8.5d, 0.2d))));
+
+        inputDevice.setArmToBottomCone().onFalse(
+            (new WaitCommand(0.5d)
+                .deadlineWith(new InstantCommand(claw::open), new KeepArmAt(arm, 8.5d, 0.2d)))
+                .andThen(new MoveShoulder(shoulder, 200d)
+                    .deadlineWith(new InstantCommand(claw::close), new KeepArmAt(arm, 8.5d, 0.2d)))
+                .andThen(new DropArm(arm)));
+
+//        inputDevice.setArmToStationPickup().onTrue(new InstantCommand(claw::close)
+//            .alongWith(new DropArm(arm), new MoveShoulder(shoulder, 200d)));
+//
+//        inputDevice.setArmToStationPickup().whileTrue(new KeepArmAt(arm, 2d));
+//        inputDevice.setArmToStationPickup().onFalse(new DropArm(arm));
     }
 
     /**
@@ -206,7 +273,7 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        // An example command will be run in autonomous
-        return swerveDrive.auton1();
+        return new InstantCommand(arm::zeroEncoder)
+            .andThen(Autos.auton1(swerveDrive, shoulder, arm, claw));
     }
 }

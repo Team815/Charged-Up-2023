@@ -18,7 +18,7 @@ public class DriveToCommand extends CommandBase {
         super();
         this.target = target;
         this.swerveDrive = swerveDrive;
-        pid = new PIDController(0.03d, 0.001d, 0d);
+        pid = new PIDController(0.08d, 0d, 0d);
         pid.setTolerance(0.5d);
         this.maxLinearSpeed = maxLinearSpeed;
         this.maxAngularSpeed = maxAngularSpeed;
@@ -27,7 +27,7 @@ public class DriveToCommand extends CommandBase {
 
     @Override
     public void initialize() {
-        System.out.println("Initialing");
+        pid.reset();
         swerveDrive.setAngle(target.getRotation().getDegrees());
     }
 
@@ -43,5 +43,10 @@ public class DriveToCommand extends CommandBase {
     @Override
     public boolean isFinished() {
         return pid.atSetpoint();
+    }
+
+    @Override
+    public void end(boolean interrupted) {
+        swerveDrive.drive(0, 0, 0, 0d);
     }
 }

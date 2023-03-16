@@ -16,4 +16,8 @@ public interface InputDevice {
     Trigger centerOnTarget();
 
     Trigger openClaw();
+    Trigger setArmToTopCone();
+    Trigger setArmToBottomCone();
+    Trigger setArmToStationPickup();
+    Trigger setArmToGroundPickup();
 }

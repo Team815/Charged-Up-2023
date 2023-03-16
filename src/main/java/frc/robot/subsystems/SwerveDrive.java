@@ -39,7 +39,7 @@ public class SwerveDrive extends SubsystemBase {
     private static boolean autoCorrectEnabled;
     private static double autoCorrectDelay;
     private static double maxLinearAcceleration;
-    private static double maxAngularAccerlation;
+    private static double maxAngularAcceleration;
     private ChassisSpeeds currentSpeeds = new ChassisSpeeds();
     private static final GenericEntry autoCorrectEnabledEntry;
     private static final GenericEntry autoCorrectDelayEntry;
@@ -57,7 +57,7 @@ public class SwerveDrive extends SubsystemBase {
         autoCorrectEnabled = true;
         autoCorrectDelay = 0.4d;
         maxLinearAcceleration = 0.03d;
-        maxAngularAccerlation = 0.03d;
+        maxAngularAcceleration = 0.05d;
         var tab = Shuffleboard.getTab("SmartDashboard");
         var layout = tab
             .getLayout("Swerve Drive", BuiltInLayouts.kGrid)
@@ -77,7 +77,7 @@ public class SwerveDrive extends SubsystemBase {
             .withPosition(0, 2)
             .getEntry();
         maxAngularAccelerationEntry = layout
-            .add("Max Angular Acceleration", maxAngularAccerlation)
+            .add("Max Angular Acceleration", maxAngularAcceleration)
             .withPosition(0, 3)
             .getEntry();
     }
@@ -136,7 +136,7 @@ public class SwerveDrive extends SubsystemBase {
         inst.addListener(
             maxAngularAccelerationEntry,
             EnumSet.of(NetworkTableEvent.Kind.kValueAll),
-            e -> maxAngularAccerlation = e.valueData.value.getDouble());
+            e -> maxAngularAcceleration = e.valueData.value.getDouble());
     }
 
     @Override
@@ -156,7 +156,7 @@ public class SwerveDrive extends SubsystemBase {
         var nextAngularSpeed = getNextSpeed(
             currentSpeeds.omegaRadiansPerSecond,
             targetSpeeds.omegaRadiansPerSecond,
-            maxAngularAccerlation);
+            maxAngularAcceleration);
 
         var autoCorrect = autoCorrectEnabled ? autoCorrectRotation(
                 currentSpeeds.omegaRadiansPerSecond,
@@ -208,35 +208,29 @@ public class SwerveDrive extends SubsystemBase {
             .andThen(new LevelChargeStation(this));
     }
 
-    public CommandBase auton1(){
-        return new InstantCommand(this::resetPose)
-            .andThen(new InstantCommand(() -> this.resetGyro(180d)))
+    public CommandBase chargeStation() {
+        return new InstantCommand(() -> resetGyro(180))
+            .andThen(this::resetPose)
             .andThen(new DriveToCommand(
-                new Pose2d(-10d, 0d, Rotation2d.fromDegrees(180d)),
+                new Pose2d(-40d, 0d, Rotation2d.fromDegrees(180d)),
                 0.2d,
                 0.2d,
-                this))
-            .andThen(new DriveToCommand(
-                new Pose2d(40d, 0d, Rotation2d.fromDegrees(0d)),
-                0.4d,
-                0.5d,
-                this))
-            .andThen(new DriveToCommand(
-                new Pose2d(80d, 0d, Rotation2d.fromDegrees(0d)),
-                0.4d,
-                0.5d,
-                this))
-            .andThen(new DriveToCommand(
-                new Pose2d(80d, 45d, Rotation2d.fromDegrees(180d)),
-                0.4d,
-                0.5d,
-                this))
-            .andThen(new DriveToCommand(
-                new Pose2d(40d, 45d, Rotation2d.fromDegrees(180d)),
-                0.2d,
-                0.5d,
                 this))
             .andThen(new LevelChargeStation(this));
+    }
+
+    public DriveToCommand driveTo(
+        double x,
+        double y,
+        double angle,
+        double maxLinearSpeed,
+        double maxAngularSpeed) {
+        return new DriveToCommand(
+            new Pose2d(x, y, Rotation2d.fromDegrees(angle)),
+            maxLinearSpeed,
+            maxAngularSpeed,
+            this
+        );
     }
 
     public void setAngle(double angle) {
