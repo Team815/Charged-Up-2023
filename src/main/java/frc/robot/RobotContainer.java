@@ -89,8 +89,8 @@ public class RobotContainer {
         final var frontRightRotateSensorId = 10;
         final var backLeftRotateSensorId = 11;
         final var backRightRotateSensorId = 12;
-        final var frontLeftAngularOffset = -140d;
-        final var frontRightAngularOffset = 72d;
+        final var frontLeftAngularOffset = -160d;
+        final var frontRightAngularOffset = -5d;
         final var backLeftAngularOffset = 98d;
         final var backRightAngularOffset = 171.5d;
 
@@ -187,6 +187,7 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
+        //return new RunCommand(() -> swerveDrive.drive(0.1, 0, 0, 0.5), swerveDrive);
         // An example command will be run in autonomous
         return swerveDrive.auton1();
     }

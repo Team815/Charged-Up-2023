@@ -110,6 +110,7 @@ public class SwerveModule {
         state = optimize(state);
         var spinSpeed = state.speedMetersPerSecond * maxLinearSpeed;
         spinController.set(spinSpeed);
+        //spinController.set(0);
 
         var rotation = state.angle.getDegrees();
         pid.setSetpoint(rotation);

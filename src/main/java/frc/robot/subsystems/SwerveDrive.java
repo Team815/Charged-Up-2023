@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.commands.DriveToCommand;
 import frc.robot.commands.LevelChargeStation;
 
@@ -232,7 +233,7 @@ public class SwerveDrive extends SubsystemBase {
                 0.5d,
                 this))
             .andThen(new DriveToCommand(
-                new Pose2d(40d, 85d, Rotation2d.fromDegrees(180d)),
+                new Pose2d(35d, 80d, Rotation2d.fromDegrees(180d)),
                 0.2d,
                 0.5d,
                 this))
@@ -244,7 +245,7 @@ public class SwerveDrive extends SubsystemBase {
     }
 
     public double getLevel() {
-        return gyro.getPitch();
+        return gyro.getRoll();
     }
 
     public CommandBase myCommand() {
