@@ -14,8 +14,8 @@ public class MoveShoulder extends CommandBase {
     public MoveShoulder(Shoulder shoulder, double target) {
         super();
         this.shoulder = shoulder;
-        pid = new PIDController(0.0002d, 0d, 0d);
-        pid.setTolerance(100);
+        pid = new PIDController(0.00025d, 0d, 0d);
+        pid.setTolerance(200);
         buffer = new DoubleQueue(4);
         this.target = target;
         addRequirements(shoulder);
@@ -31,6 +31,7 @@ public class MoveShoulder extends CommandBase {
     @Override
     public void execute() {
         var position = shoulder.getPosition();
+//        System.out.println("Shoulder position: " + position);
         var pidValue = MathUtil.clamp(pid.calculate(position), -0.4d, 0.4d);
         buffer.add(position);
         shoulder.set(pidValue);
@@ -46,6 +47,9 @@ public class MoveShoulder extends CommandBase {
 
     @Override
     public void end(boolean interrupted) {
+        if (!interrupted) {
+            System.out.println("MoveShoulder finished");
+        }
         shoulder.set(0);
     }
 }

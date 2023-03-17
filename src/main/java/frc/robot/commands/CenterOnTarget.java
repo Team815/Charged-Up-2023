@@ -13,6 +13,7 @@ public class CenterOnTarget extends CommandBase {
     DoubleSupplier speedXSupplier;
     DoubleSupplier speedYSupplier;
     PIDController pid;
+    DoubleQueue buffer;
 
     public CenterOnTarget(
             SwerveDrive swerveDrive,

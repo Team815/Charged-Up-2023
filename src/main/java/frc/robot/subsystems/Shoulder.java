@@ -8,6 +8,7 @@ public class Shoulder extends SubsystemBase {
     private TalonSRX reachMotor;
 
     public void periodic() {
+        System.out.println("Shoulder " + getPosition());
     }
 
     final double topConeH = 18774;

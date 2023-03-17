@@ -62,7 +62,17 @@ public class Joystick extends CommandJoystick implements InputDevice {
     }
 
     @Override
-    public Trigger setArmToGroundPickup() {
+    public Trigger turtle() {
         return povLeft();
+    }
+
+    @Override
+    public Trigger slow() {
+        return null;
+    }
+
+    @Override
+    public void setScale(double scale) {
+
     }
 }

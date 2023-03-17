@@ -12,4 +12,11 @@ public class LiftArmTo extends KeepArmAt {
     public boolean isFinished() {
         return atSetpoint();
     }
+
+    @Override
+    public void end(boolean interrupted) {
+        if (!interrupted) {
+            System.out.println("LiftArmTo finished");
+        }
+    }
 }

@@ -6,15 +6,11 @@ package frc.robot.commands;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.wpilibj2.command.*;
 import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Claw;
 import frc.robot.subsystems.Shoulder;
 import frc.robot.subsystems.SwerveDrive;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public final class Autos {
     /**
@@ -25,23 +21,49 @@ public final class Autos {
         throw new UnsupportedOperationException("This is a utility class!");
     }
 
-    public static CommandBase auton1(SwerveDrive swerveDrive, Shoulder shoulder, Arm arm, Claw claw) {
+    private static final double chargeStationPositionX = 30d;
+    private static final double chargeStationPositionY = 40d;
+
+    private static CommandBase score(SwerveDrive swerveDrive, Shoulder shoulder, Arm arm, Claw claw) {
         return new InstantCommand(swerveDrive::resetPose)
             .andThen(new InstantCommand(() -> swerveDrive.resetGyro(180d)))
             .andThen(swerveDrive.driveTo(4d, 0d, 180d, 0.2d, 0.2d)
-                .alongWith(new LiftArmTo(arm, 10d, 0.1d)))
-            .andThen((new MoveShoulder(shoulder, 18000d)
-                .alongWith(swerveDrive.driveTo(0d, 0d, 180d, 0.2d, 0.2d)))
-                .deadlineWith(new KeepArmAt(arm, 10d, 0.2d)))
+                .alongWith(new LiftArmTo(arm, KeepArmAt.FarConeNode, 0.1d)))
+            .andThen(new MoveShoulder(shoulder, 18000d)
+                .alongWith(swerveDrive.driveTo(0d, 0d, 180d, 0.2d, 0.2d))
+                //.raceWith(new WaitCommand(3d))
+                .deadlineWith(new KeepArmAt(arm, KeepArmAt.FarConeNode, 0.2d)))
             .andThen(new WaitCommand(0.3d)
-                .deadlineWith(new InstantCommand(claw::open), new KeepArmAt(arm, 10d, 0.2d)))
+                .deadlineWith(new InstantCommand(claw::open), new KeepArmAt(arm, KeepArmAt.FarConeNode, 0.2d)));
+    }
+
+    public static CommandBase scoreCross(SwerveDrive swerveDrive, Shoulder shoulder, Arm arm, Claw claw) {
+        return score(swerveDrive, shoulder, arm, claw)
             .andThen(((new MoveShoulder(shoulder, 50d)
-                .deadlineWith(new KeepArmAt(arm, 10d, 0.2d), new InstantCommand(claw::close)))
-                .andThen(new DropArm(arm)
-                    .alongWith(new PrintCommand("Dropping Time"))))
-                .alongWith(swerveDrive.driveTo(85d, 0d, 180d, 0.5d, 0.5d)))
-            .andThen(swerveDrive.driveTo(85d, 40d, 180d, 0.5d, 0.5d))
-            .andThen(swerveDrive.driveTo(42d, 40d, 180d, 0.2d, 0.5d))
+                .deadlineWith(new KeepArmAt(arm, KeepArmAt.FarConeNode, 0.2d), new InstantCommand(claw::close)))
+                .andThen(new DropArm(arm)))
+                .alongWith(swerveDrive.driveTo(85d, 0d, 180d, 0.5d, 0.5d)));
+    }
+
+    private static CommandBase scoreCrossLevel(SwerveDrive swerveDrive, Shoulder shoulder, Arm arm, Claw claw, int direction) {
+        return scoreCross(swerveDrive, shoulder, arm, claw)
+            .andThen(swerveDrive.driveTo(85d, chargeStationPositionY * Math.signum(direction), 180d, 0.5d, 0.5d))
+            .andThen(swerveDrive.driveTo(chargeStationPositionX, chargeStationPositionY * Math.signum(direction), 180d, 0.3d, 0.5d))
+            .andThen(new LevelChargeStation(swerveDrive));
+    }
+
+    public static CommandBase scoreCrossLevelRight(SwerveDrive swerveDrive, Shoulder shoulder, Arm arm, Claw claw) {
+        return scoreCrossLevel(swerveDrive, shoulder, arm, claw, 1);
+    }
+
+    public static CommandBase scoreCrossLevelLeft(SwerveDrive swerveDrive, Shoulder shoulder, Arm arm, Claw claw) {
+        return scoreCrossLevel(swerveDrive, shoulder, arm, claw, -1);
+    }
+
+    public static CommandBase test(SwerveDrive swerveDrive) {
+        return new InstantCommand(swerveDrive::resetPose)
+            .andThen(new InstantCommand(() -> swerveDrive.resetGyro(180)))
+            .andThen(new DriveToCommand(new Pose2d(-55, 0d, Rotation2d.fromDegrees(180d)), 0.3d, 0.2d, swerveDrive))
             .andThen(new LevelChargeStation(swerveDrive));
     }
 }

@@ -11,28 +11,34 @@ public class DropArm extends CommandBase {
 
     public DropArm(Arm arm) {
         this.arm = arm;
-        pid = new PIDController(0.02d, 0d, 0d);
+        pid = new PIDController(0.5d, 0d, 0d);
+        pid.setTolerance(0.02);
         addRequirements(arm);
     }
 
     @Override
     public void initialize() {
-        pid.setSetpoint(0d);
+        pid.setSetpoint(0.135d);
     }
 
     @Override
     public void execute() {
         isRunning = true;
-        arm.set(pid.calculate(arm.getPosition()));
+        var output = -pid.calculate(arm.getPosition());
+        System.out.println(output);
+        arm.set(output);
     }
 
     @Override
     public boolean isFinished() {
-        return Math.abs(arm.getPosition()) < 0.5d;
+        return pid.atSetpoint();
     }
 
     @Override
     public void end(boolean interrupted) {
+        if (!interrupted) {
+            System.out.println("DropArm finished");
+        }
         arm.set(0d);
         isRunning = false;
     }

@@ -5,7 +5,8 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 public class XboxController extends CommandXboxController implements InputDevice {
-    private static final double DEADBAND = 0.15;
+    private static final double DEADBAND = 0.15d;
+    private double scale = 1d;
 
     public XboxController() {
         super(0);
@@ -13,17 +14,17 @@ public class XboxController extends CommandXboxController implements InputDevice
 
     @Override
     public double getHorizontalSpeed() {
-        return MathUtil.applyDeadband(-getLeftX(), DEADBAND);
+        return MathUtil.applyDeadband(-getLeftX(), DEADBAND) * scale;
     }
 
     @Override
     public double getVerticalSpeed() {
-        return MathUtil.applyDeadband(-getLeftY(), DEADBAND);
+        return MathUtil.applyDeadband(-getLeftY(), DEADBAND) * scale;
     }
 
     @Override
     public double getAngularSpeed() {
-        return MathUtil.applyDeadband(getRightX(), DEADBAND);
+        return MathUtil.applyDeadband(getRightX(), DEADBAND) * scale;
     }
 
     @Override
@@ -62,7 +63,17 @@ public class XboxController extends CommandXboxController implements InputDevice
     }
 
     @Override
-    public Trigger setArmToGroundPickup() {
-        return povLeft();
+    public Trigger turtle() {
+        return povDown();
+    }
+
+    @Override
+    public Trigger slow() {
+        return this.leftTrigger();
+    }
+
+    @Override
+    public void setScale(double scale) {
+        this.scale = scale;
     }
 }

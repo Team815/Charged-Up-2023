@@ -47,6 +47,9 @@ public class DriveToCommand extends CommandBase {
 
     @Override
     public void end(boolean interrupted) {
+        if (!interrupted) {
+            System.out.println("DriveTo finished");
+        }
         swerveDrive.drive(0, 0, 0, 0d);
     }
 }

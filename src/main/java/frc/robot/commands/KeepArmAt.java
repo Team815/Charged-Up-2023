@@ -11,10 +11,15 @@ public class KeepArmAt extends CommandBase {
     private final double target;
     private final double maxSpeed;
 
+    public static final double FarConeNode = -0.120d;
+    public static final double NearConeNode = -0.08d;
+    public static final double Substation = -0.07d;
+    public static final double AboveFloor = 0.11d;
+
     public KeepArmAt(Arm arm, double target, double maxSpeed) {
         super();
         this.arm = arm;
-        pid = new PIDController(0.1d, 0d, 0d);
+        pid = new PIDController(2d, 0d, 0d);
         this.target = target;
         this.maxSpeed = maxSpeed;
         addRequirements(arm);
@@ -28,8 +33,9 @@ public class KeepArmAt extends CommandBase {
     @Override
     public void execute() {
         var position = arm.getPosition();
-        var response = MathUtil.clamp(pid.calculate(position), -maxSpeed, maxSpeed) + 0.08;
+        var response = MathUtil.clamp(-pid.calculate(position), -maxSpeed, maxSpeed) + 0.055;
         arm.set(response);
+//        System.out.println(position + " " + pid.getSetpoint());
     }
 
     @Override

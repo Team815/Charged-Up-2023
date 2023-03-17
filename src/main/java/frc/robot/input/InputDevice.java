@@ -19,5 +19,7 @@ public interface InputDevice {
     Trigger setArmToTopCone();
     Trigger setArmToBottomCone();
     Trigger setArmToStationPickup();
-    Trigger setArmToGroundPickup();
+    Trigger turtle();
+    Trigger slow();
+    void setScale(double scale);
 }
