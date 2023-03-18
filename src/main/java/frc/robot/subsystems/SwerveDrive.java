@@ -238,7 +238,7 @@ public class SwerveDrive extends SubsystemBase {
     }
 
     public double getLevel() {
-        return gyro.getPitch();
+        return gyro.getRoll();
     }
 
     public CommandBase myCommand() {

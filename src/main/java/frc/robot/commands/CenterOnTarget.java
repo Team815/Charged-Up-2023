@@ -13,19 +13,21 @@ public class CenterOnTarget extends CommandBase {
     DoubleSupplier speedXSupplier;
     DoubleSupplier speedYSupplier;
     PIDController pid;
-    DoubleQueue buffer;
+    double maxSpeed;
 
     public CenterOnTarget(
             SwerveDrive swerveDrive,
             DoubleSupplier targetOffsetSupplier,
             DoubleSupplier speedXSupplier,
             DoubleSupplier speedYSupplier,
-            double p) {
+            double p,
+            double maxSpeed) {
         this.swerveDrive = swerveDrive;
         this.targetOffsetSupplier = targetOffsetSupplier;
         this.speedXSupplier = speedXSupplier;
         this.speedYSupplier = speedYSupplier;
         pid = new PIDController(p, 0d, 0d);
+        this.maxSpeed = maxSpeed;
         addRequirements(swerveDrive);
     }
 

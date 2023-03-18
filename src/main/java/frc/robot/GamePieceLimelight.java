@@ -16,8 +16,7 @@ public class GamePieceLimelight extends Limelight {
 
     private enum Target {
         Cube(0),
-        Cone(1),
-        ConeNode(2);
+        Cone(1);
 
         private final int pipeline;
 
@@ -52,9 +51,7 @@ public class GamePieceLimelight extends Limelight {
     }
 
     public void cycleTarget() {
-        target = target == Target.Cube ? Target.Cone :
-            target == Target.Cone ? Target.ConeNode :
-                Target.Cube;
+        target = target == Target.Cube ? Target.Cone : Target.Cube;
         setPipeline(target.pipeline);
     }
 

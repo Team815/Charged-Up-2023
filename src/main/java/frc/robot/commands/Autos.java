@@ -31,25 +31,30 @@ public final class Autos {
                 .alongWith(new LiftArmTo(arm, KeepArmAt.FarConeNode, 0.1d)))
             .andThen(new MoveShoulder(shoulder, 18000d)
                 .alongWith(swerveDrive.driveTo(0d, 0d, 180d, 0.2d, 0.2d))
-                //.raceWith(new WaitCommand(3d))
                 .deadlineWith(new KeepArmAt(arm, KeepArmAt.FarConeNode, 0.2d)))
+            .withTimeout(4d)
             .andThen(new WaitCommand(0.3d)
                 .deadlineWith(new InstantCommand(claw::open), new KeepArmAt(arm, KeepArmAt.FarConeNode, 0.2d)));
     }
 
     public static CommandBase scoreCross(SwerveDrive swerveDrive, Shoulder shoulder, Arm arm, Claw claw) {
         return score(swerveDrive, shoulder, arm, claw)
-            .andThen(((new MoveShoulder(shoulder, 50d)
-                .deadlineWith(new KeepArmAt(arm, KeepArmAt.FarConeNode, 0.2d), new InstantCommand(claw::close)))
-                .andThen(new DropArm(arm)))
-                .alongWith(swerveDrive.driveTo(85d, 0d, 180d, 0.5d, 0.5d)));
+            .andThen(new MoveShoulder(shoulder, 0d)
+                .alongWith(
+                    swerveDrive.driveTo(85d, 0d, 180d, 0.6d, 0.5d),
+                    new InstantCommand(claw::close),
+                    new WaitCommand(0.3d)
+                        .deadlineWith(new KeepArmAt(arm, KeepArmAt.FarConeNode, 0.2d))
+                        .andThen(new DropArm(arm))));
     }
 
     private static CommandBase scoreCrossLevel(SwerveDrive swerveDrive, Shoulder shoulder, Arm arm, Claw claw, int direction) {
         return scoreCross(swerveDrive, shoulder, arm, claw)
-            .andThen(swerveDrive.driveTo(85d, chargeStationPositionY * Math.signum(direction), 180d, 0.5d, 0.5d))
-            .andThen(swerveDrive.driveTo(chargeStationPositionX, chargeStationPositionY * Math.signum(direction), 180d, 0.3d, 0.5d))
-            .andThen(new LevelChargeStation(swerveDrive));
+            .andThen(swerveDrive.driveTo(85d, chargeStationPositionY * Math.signum(direction), 90d, 0.6d, 0.5d))
+            .andThen(swerveDrive.driveTo(chargeStationPositionX, chargeStationPositionY * Math.signum(direction), 90d, 0.3d, 0.5d))
+            .andThen(new LevelChargeStation(swerveDrive))
+            .withTimeout(14.8d)
+            .andThen(new RunCommand(() -> swerveDrive.drive(0d, 0d, 0d, 0d)));
     }
 
     public static CommandBase scoreCrossLevelRight(SwerveDrive swerveDrive, Shoulder shoulder, Arm arm, Claw claw) {
@@ -62,8 +67,8 @@ public final class Autos {
 
     public static CommandBase test(SwerveDrive swerveDrive) {
         return new InstantCommand(swerveDrive::resetPose)
-            .andThen(new InstantCommand(() -> swerveDrive.resetGyro(180)))
-            .andThen(new DriveToCommand(new Pose2d(-55, 0d, Rotation2d.fromDegrees(180d)), 0.3d, 0.2d, swerveDrive))
+            .andThen(new InstantCommand(() -> swerveDrive.resetGyro(90d)))
+            .andThen(swerveDrive.driveTo(-55d, 0, 90d, 0.3d, 0.5d))
             .andThen(new LevelChargeStation(swerveDrive));
     }
 }

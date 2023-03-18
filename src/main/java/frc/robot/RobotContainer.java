@@ -199,7 +199,8 @@ public class RobotContainer {
             limelight::getHorizontalOffset,
             () -> inputDevice.getVerticalSpeed() * maxTeleopXSpeed,
             () -> inputDevice.getHorizontalSpeed() * maxTeleopYSpeed,
-            limelight.getP()));
+            limelight.getP(),
+            inputDevice.setArmToStationPickup().getAsBoolean() ? 0.05d : 1d));
 
         //Claw
         inputDevice.openClaw().whileTrue(

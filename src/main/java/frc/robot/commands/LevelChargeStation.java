@@ -9,8 +9,8 @@ public class LevelChargeStation extends CommandBase {
     private final DoubleQueue levels;
     private double initialAngle;
 
-    private static final double initialSpeed = 0.15d;
-    private static final double subsequentSpeed = 0.06d;
+    private static final double initialSpeed = 0.1d;
+    private static final double subsequentSpeed = 0.07d;
 
     public LevelChargeStation(SwerveDrive swerveDrive) {
         super();
@@ -23,7 +23,7 @@ public class LevelChargeStation extends CommandBase {
 
     @Override
     public void execute() {
-        final var threshold = 5d;
+        final var threshold = 0d;
         var level = swerveDrive.getLevel();
         if (levels.isFull()) {
             var range = levels.range();
@@ -40,7 +40,7 @@ public class LevelChargeStation extends CommandBase {
                 initialAngle = 2;
                 speed = subsequentSpeed * Math.signum(largestLevel);
             }
-            swerveDrive.drive(speed, 0d, 0d, 0.5d);
+            swerveDrive.drive(-speed, 0d, 0d, 0.5d);
         }
         levels.add(level);
     }
