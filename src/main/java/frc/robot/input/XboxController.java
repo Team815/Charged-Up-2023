@@ -23,7 +23,7 @@ public class XboxController extends CommandXboxController implements InputDevice
 
     @Override
     public double getAngularSpeed() {
-        return MathUtil.applyDeadband(getRightX(), DEADBAND);
+        return MathUtil.applyDeadband(-getRightX(), DEADBAND);
     }
 
     @Override

@@ -12,117 +12,74 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.networktables.GenericEntry;
-import edu.wpi.first.networktables.NetworkTableEvent;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
-
-import java.util.EnumSet;
-import java.util.Map;
 
 /**
  * Add your docs here.
  */
 public class SwerveModule {
-    private static final GenericEntry maxLinearRateEntry;
-    private static final GenericEntry maxAngularRateEntry;
-    private static final GenericEntry angularPEntry;
-    private static final GenericEntry maxLinearSpeedEntry;
-    private static final GenericEntry maxAngularSpeedEntry;
-    private static double maxLinearSpeed;
-    private static double maxAngularSpeed;
-    private final CANSparkMax spinController;
-    private final CANSparkMax rotateController;
+    public static final double DEFAULT_MAX_LINEAR_SPEED = 1d;
+    public static final double DEFAULT_MAX_ANGULAR_SPEED = 0.2d;
+    public static final double DEFAULT_MAX_LINEAR_RATE = 0.1d;
+    public static final double DEFAULT_MAX_ANGULAR_RATE = 0.1d;
+    public static final double DEFAULT_P = 0.015d;
+    private double maxLinearSpeed = DEFAULT_MAX_LINEAR_SPEED;
+    private double maxAngularSpeed = DEFAULT_MAX_ANGULAR_SPEED;
+    private final CANSparkMax linearController;
+    private final CANSparkMax angularController;
     private final CANCoder rotateSensor;
-    private final PIDController pid;
-
-    static {
-        final var maxLinearRate = 0.1d;
-        final var maxAngularRate = 0.1d;
-        final var angularP = 0.015d;
-        maxLinearSpeed = 1d;
-        maxAngularSpeed = 0.2d;
-        var tab = Shuffleboard.getTab("SmartDashboard");
-        var layout = tab
-            .getLayout("Swerve Modules", BuiltInLayouts.kGrid)
-            .withSize(2, 2)
-            .withProperties(Map.of("Label position", "LEFT", "Number of columns", 1, "Number of rows", 5));
-        maxLinearSpeedEntry = layout
-            .add("Max Linear Speed", maxLinearSpeed)
-            .withPosition(0, 0)
-            .getEntry();
-        maxAngularSpeedEntry = layout
-            .add("Max Angular Speed", maxAngularSpeed)
-            .withPosition(0, 1)
-            .getEntry();
-        maxLinearRateEntry = layout
-            .add("Max Linear Rate", maxLinearRate)
-            .withPosition(0, 2)
-            .getEntry();
-        maxAngularRateEntry = layout
-            .add("Max Angular Rate", maxAngularRate)
-            .withPosition(0, 3)
-            .getEntry();
-        angularPEntry = layout
-            .add("Angular P", angularP)
-            .withPosition(0, 4)
-            .getEntry();
-    }
+    private final PIDController pid = new PIDController(DEFAULT_P, 0d, 0d);;
 
     public SwerveModule(int spinControllerID, int rotateControllerID, int rotateSensorID, double angularOffset) {
-        spinController = new CANSparkMax(spinControllerID, MotorType.kBrushless);
-        rotateController = new CANSparkMax(rotateControllerID, MotorType.kBrushless);
-        spinController.restoreFactoryDefaults();
-        rotateController.restoreFactoryDefaults();
+        linearController = new CANSparkMax(spinControllerID, MotorType.kBrushless);
+        angularController = new CANSparkMax(rotateControllerID, MotorType.kBrushless);
+        linearController.restoreFactoryDefaults();
+        angularController.restoreFactoryDefaults();
         rotateSensor = new CANCoder(rotateSensorID);
         rotateSensor.configFactoryDefault();
         rotateSensor.configMagnetOffset(angularOffset);
-        pid = new PIDController(angularPEntry.get().getDouble(), 0d, 0d);
         pid.enableContinuousInput(0d, 360d);
-
-        // Shuffleboard listeners
-
-        var inst = NetworkTableInstance.getDefault();
-        inst.addListener(
-            maxLinearRateEntry,
-            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
-            e -> spinController.setOpenLoopRampRate(e.valueData.value.getDouble()));
-        inst.addListener(
-            maxAngularRateEntry,
-            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
-            e -> rotateController.setOpenLoopRampRate(e.valueData.value.getDouble()));
-        inst.addListener(
-            angularPEntry,
-            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
-            e -> pid.setP(e.valueData.value.getDouble()));
-        inst.addListener(
-            maxLinearSpeedEntry,
-            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
-            e -> maxLinearSpeed = e.valueData.value.getDouble());
-        inst.addListener(
-            maxAngularSpeedEntry,
-            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
-            e -> maxAngularSpeed = e.valueData.value.getDouble());
     }
 
     public void drive(SwerveModuleState state) {
         state = optimize(state);
-        var spinSpeed = state.speedMetersPerSecond * maxLinearSpeed;
-        spinController.set(spinSpeed);
-        //spinController.set(0);
+        var spinSpeed = MathUtil.clamp(state.speedMetersPerSecond, -maxLinearSpeed, maxLinearSpeed);
+        linearController.set(spinSpeed);
 
         var rotation = state.angle.getDegrees();
         pid.setSetpoint(rotation);
         var response = -pid.calculate(rotateSensor.getAbsolutePosition());
-        rotateController.set(MathUtil.clamp(response, -maxAngularSpeed, maxAngularSpeed));
+        angularController.set(MathUtil.clamp(response, -maxAngularSpeed, maxAngularSpeed));
     }
 
     public SwerveModulePosition getPosition() {
         return new SwerveModulePosition(
-            spinController.getEncoder().getPosition(),
+            linearController.getEncoder().getPosition(),
             Rotation2d.fromDegrees(rotateSensor.getAbsolutePosition()));
     }
+
+    // Setters
+
+    public void setMaxLinearSpeed(double maxLinearSpeed) {
+        this.maxLinearSpeed = Math.abs(maxLinearSpeed);
+    }
+
+    public void setMaxAngularSpeed(double maxAngularSpeed) {
+        this.maxAngularSpeed = Math.abs(maxAngularSpeed);
+    }
+
+    public void setP(double p) {
+        pid.setP(p);
+    }
+
+    public void setMaxLinearAcceleration(double maxLinearAcceleration) {
+        linearController.setOpenLoopRampRate(maxLinearAcceleration);
+    }
+
+    public void setMaxAngularAcceleration(double maxAngularAcceleration) {
+        angularController.setOpenLoopRampRate(maxAngularAcceleration);
+    }
+
+    // Private
 
     private SwerveModuleState optimize(SwerveModuleState state) {
         return SwerveModuleState.optimize(

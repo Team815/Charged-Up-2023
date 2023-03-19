@@ -43,6 +43,7 @@ public class RobotContainer {
 
     private final SwerveDrive swerveDrive;
     private final GamePieceLimelight limelight;
+    Dashboard shuffleboard;
 
     static {
         maxTeleopXSpeed = 1d;
@@ -94,27 +95,39 @@ public class RobotContainer {
         final var backLeftAngularOffset = 98d;
         final var backRightAngularOffset = 171.5d;
 
-        swerveDrive = new SwerveDrive(
-            new SwerveModule(
-                frontLeftSpinId,
-                frontLeftRotateId,
-                frontLeftRotateSensorId,
-                frontLeftAngularOffset),
-            new SwerveModule(
-                frontRightSpinId,
-                frontRightRotateId,
-                frontRightRotateSensorId,
-                frontRightAngularOffset),
-            new SwerveModule(
-                backLeftSpinId,
-                backLeftRotateId,
-                backLeftRotateSensorId,
-                backLeftAngularOffset),
-            new SwerveModule(
-                backRightSpinId,
-                backRightRotateId,
-                backRightRotateSensorId,
-                backRightAngularOffset));
+        var moduleFrontLeft = new SwerveModule(
+            frontLeftSpinId,
+            frontLeftRotateId,
+            frontLeftRotateSensorId,
+            frontLeftAngularOffset);
+
+        var moduleFrontRight = new SwerveModule(
+            frontRightSpinId,
+            frontRightRotateId,
+            frontRightRotateSensorId,
+            frontRightAngularOffset);
+
+        var moduleBackLeft = new SwerveModule(
+            backLeftSpinId,
+            backLeftRotateId,
+            backLeftRotateSensorId,
+            backLeftAngularOffset);
+
+        var moduleBackRight = new SwerveModule(
+            backRightSpinId,
+            backRightRotateId,
+            backRightRotateSensorId,
+            backRightAngularOffset);
+
+        swerveDrive = new SwerveDrive(moduleFrontLeft, moduleFrontRight, moduleBackLeft, moduleBackRight);
+
+        shuffleboard = new Dashboard(
+            "SmartDashboard",
+            swerveDrive,
+            moduleFrontLeft,
+            moduleFrontRight,
+            moduleBackLeft,
+            moduleBackRight);
 
         limelight = new GamePieceLimelight("limelight-field");
         inputDevice = new XboxController();
