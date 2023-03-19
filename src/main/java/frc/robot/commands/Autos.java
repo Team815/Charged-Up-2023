@@ -22,13 +22,14 @@ public final class Autos {
     }
 
     private static final double chargeStationPositionX = 30d;
-    private static final double chargeStationPositionY = 40d;
+    private static final double chargeStationPositionY = 41d;
 
     private static CommandBase score(SwerveDrive swerveDrive, Shoulder shoulder, Arm arm, Claw claw) {
         return new InstantCommand(swerveDrive::resetPose)
             .andThen(new InstantCommand(() -> swerveDrive.resetGyro(180d)))
             .andThen(swerveDrive.driveTo(4d, 0d, 180d, 0.2d, 0.2d)
-                .alongWith(new LiftArmTo(arm, KeepArmAt.FarConeNode, 0.1d)))
+                .alongWith(new LiftArmTo(arm, KeepArmAt.FarConeNode, 0.1d)
+                    .withTimeout(3d)))
             .andThen(new MoveShoulder(shoulder, 18000d)
                 .alongWith(swerveDrive.driveTo(0d, 0d, 180d, 0.2d, 0.2d))
                 .deadlineWith(new KeepArmAt(arm, KeepArmAt.FarConeNode, 0.2d)))

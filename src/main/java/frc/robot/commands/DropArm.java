@@ -25,7 +25,7 @@ public class DropArm extends CommandBase {
     public void execute() {
         isRunning = true;
         var output = -pid.calculate(arm.getPosition());
-        System.out.println(output);
+//        System.out.println(output);
         arm.set(output);
     }
 
