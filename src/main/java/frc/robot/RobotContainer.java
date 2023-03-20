@@ -4,9 +4,6 @@
 
 package frc.robot;
 
-import edu.wpi.first.networktables.GenericEntry;
-import edu.wpi.first.networktables.NetworkTableEvent;
-import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
@@ -15,19 +12,13 @@ import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.*;
-import frc.robot.commands.*;
-import frc.robot.input.InputDevice;
-import frc.robot.input.Joystick;
-import frc.robot.input.XboxController;
-import frc.robot.subsystems.Arm;
-import frc.robot.subsystems.Claw;
-import frc.robot.subsystems.Shoulder;
-import frc.robot.subsystems.SwerveDrive;
-import frc.robot.subsystems.SwerveModule;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.commands.*;
+import frc.robot.input.InputDevice;
+import frc.robot.input.XboxController;
+import frc.robot.subsystems.*;
 
-import java.util.EnumSet;
 import java.util.Map;
 
 /**
@@ -38,24 +29,15 @@ import java.util.Map;
  */
 public class RobotContainer {
     private InputDevice inputDevice;
-    private static final GenericEntry inputDeviceChoiceEntry;
-    private static double maxTeleopXSpeed;
-    private static double maxTeleopYSpeed;
-    private static double maxTeleopAngularSpeed;
-    private static final GenericEntry maxTeleopXSpeedEntry;
-    private static final GenericEntry maxTeleopYSpeedEntry;
-    private static final GenericEntry maxTeleopAngularSpeedEntry;
     private static final SendableChooser<Integer> autonChooser;
     private final SwerveDrive swerveDrive;
     private final Claw claw;
     private final GamePieceLimelight limelight;
     private final Arm arm;
     private final Shoulder shoulder;
+    private final Dashboard shuffleboard;
 
     static {
-        maxTeleopXSpeed = 1d;
-        maxTeleopYSpeed = 1d;
-        maxTeleopAngularSpeed = 1d;
         autonChooser = new SendableChooser<>();
         autonChooser.setDefaultOption("ScoreCross", 0);
         autonChooser.addOption("ScoreCrossLevelRight", 1);
@@ -65,27 +47,10 @@ public class RobotContainer {
         var layout = tab
             .getLayout("Robot", BuiltInLayouts.kGrid)
             .withSize(3, 2)
-            .withProperties(Map.of("Label position", "LEFT", "Number of columns", 1, "Number of rows", 5));
-        inputDeviceChoiceEntry = layout
-            .add("Joystick <-> Xbox Controller", true)
-            .withWidget(BuiltInWidgets.kToggleSwitch)
-            .withPosition(0, 0)
-            .getEntry();
-        maxTeleopXSpeedEntry = layout
-            .add("Max Vertical Speed", maxTeleopXSpeed)
-            .withPosition(0, 1)
-            .getEntry();
-        maxTeleopYSpeedEntry = layout
-            .add("Max Horizontal Speed", maxTeleopYSpeed)
-            .withPosition(0, 2)
-            .getEntry();
-        maxTeleopAngularSpeedEntry = layout
-            .add("Max Angular Speed", maxTeleopAngularSpeed)
-            .withPosition(0, 3)
-            .getEntry();
+            .withProperties(Map.of("Label position", "LEFT", "Number of columns", 1, "Number of rows", 1));
         layout
             .add("Autonomous", autonChooser)
-            .withPosition(0, 4)
+            .withPosition(0, 0)
             .withWidget(BuiltInWidgets.kComboBoxChooser);
     }
 
@@ -111,27 +76,32 @@ public class RobotContainer {
         final var backLeftAngularOffset = -146.5d;
         final var backRightAngularOffset = -11.5d;
 
-        swerveDrive = new SwerveDrive(
-            new SwerveModule(
-                frontLeftSpinId,
-                frontLeftRotateId,
-                frontLeftRotateSensorId,
-                frontLeftAngularOffset),
-            new SwerveModule(
-                frontRightSpinId,
-                frontRightRotateId,
-                frontRightRotateSensorId,
-                frontRightAngularOffset),
-            new SwerveModule(
-                backLeftSpinId,
-                backLeftRotateId,
-                backLeftRotateSensorId,
-                backLeftAngularOffset),
-            new SwerveModule(
-                backRightSpinId,
-                backRightRotateId,
-                backRightRotateSensorId,
-                backRightAngularOffset));
+        var moduleFrontLeft = new SwerveModule(
+            frontLeftSpinId,
+            frontLeftRotateId,
+            frontLeftRotateSensorId,
+            frontLeftAngularOffset);
+
+        var moduleFrontRight = new SwerveModule(
+            frontRightSpinId,
+            frontRightRotateId,
+            frontRightRotateSensorId,
+            frontRightAngularOffset);
+
+        var moduleBackLeft = new SwerveModule(
+            backLeftSpinId,
+            backLeftRotateId,
+            backLeftRotateSensorId,
+            backLeftAngularOffset);
+
+        var moduleBackRight = new SwerveModule(
+            backRightSpinId,
+            backRightRotateId,
+            backRightRotateSensorId,
+            backRightAngularOffset);
+
+        swerveDrive = new SwerveDrive(moduleFrontLeft, moduleFrontRight, moduleBackLeft, moduleBackRight);
+
 
         final var compressorPort = 30;
         final var solenoidChannel = 0;
@@ -151,27 +121,16 @@ public class RobotContainer {
         arm = new Arm(verticalMotorMainId, verticalMotorSecondaryId);
         shoulder = new Shoulder(horizontalMotorId);
 
-        var inst = NetworkTableInstance.getDefault();
-        inst.addListener(
-            inputDeviceChoiceEntry,
-            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
-            e -> {
-                var useXboxController = e.valueData.value.getBoolean();
-                inputDevice = useXboxController ? new XboxController() : new Joystick();
-                configureBindings();
-            });
-        inst.addListener(
-            maxTeleopXSpeedEntry,
-            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
-            e -> maxTeleopXSpeed = e.valueData.value.getDouble());
-        inst.addListener(
-            maxTeleopYSpeedEntry,
-            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
-            e -> maxTeleopYSpeed = e.valueData.value.getDouble());
-        inst.addListener(
-            maxTeleopAngularSpeedEntry,
-            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
-            e -> maxTeleopAngularSpeed = e.valueData.value.getDouble());
+        shuffleboard = new Dashboard(
+            "SmartDashboard",
+            swerveDrive,
+            limelight,
+            () -> inputDevice,
+            this,
+            moduleFrontLeft,
+            moduleFrontRight,
+            moduleBackLeft,
+            moduleBackRight);
 
         // Configure the trigger bindings
         configureBindings();
@@ -197,9 +156,9 @@ public class RobotContainer {
         inputDevice.centerOnTarget().whileTrue(new CenterOnTarget(
             swerveDrive,
             limelight::getHorizontalOffset,
-            () -> inputDevice.getVerticalSpeed() * maxTeleopXSpeed,
-            () -> inputDevice.getHorizontalSpeed() * maxTeleopYSpeed,
-            limelight.getP(),
+            () -> inputDevice.getForwardVelocity(),
+            () -> inputDevice.getSidewaysVelocity(),
+            0.02d,
             inputDevice.setArmToStationPickup().getAsBoolean() ? 0.05d : 1d));
 
         //Claw
@@ -254,22 +213,24 @@ public class RobotContainer {
             .alongWith(new MoveShoulder(shoulder, 0d)));
 
         inputDevice.slow().whileTrue(new StartEndCommand(
-            () -> inputDevice.setScale(0.2d),
-            () -> inputDevice.setScale(1d)));
+            () -> {
+                inputDevice.setMaxSidewaysSpeed(0.2d);
+                inputDevice.setMaxForwardSpeed(0.2d);
+                inputDevice.setMaxAngularSpeed(0.2d);
+            },
+            () -> {
+                inputDevice.setMaxSidewaysSpeed(1d);
+                inputDevice.setMaxForwardSpeed(1d);
+                inputDevice.setMaxAngularSpeed(1d);
+            }));
 
-        // The robot assumes positive vertical direction is forward,
-        // but the controller positive vertical direction is down (backward).
-        // Therefore, we must negate the left joystick's Y direction.
-        //
-        // The robot also assumes positive sideways direction is to the left,
-        // but the controller positive sideways direction is to the right.
-        // Therefore, we must negate the left joystick's X direction.
-        swerveDrive.setDefaultCommand(new RunCommand(() -> swerveDrive.drive(
-            inputDevice.getVerticalSpeed() * maxTeleopXSpeed,
-            inputDevice.getHorizontalSpeed() * maxTeleopYSpeed,
-            inputDevice.getAngularSpeed() * maxTeleopAngularSpeed,
-            0.5d),
-            swerveDrive));
+        swerveDrive.setDefaultCommand(
+            new RunCommand(() -> swerveDrive.drive(
+                inputDevice.getForwardVelocity(),
+                inputDevice.getSidewaysVelocity(),
+                inputDevice.getAngularVelocity(),
+                0.5d),
+                swerveDrive));
     }
 
     /**
@@ -285,5 +246,10 @@ public class RobotContainer {
             : Autos.scoreCross(swerveDrive, shoulder, arm, claw);
         return new InstantCommand(arm::zeroEncoder)
             .andThen(auton);
+    }
+
+    public void setInputDevice(InputDevice inputDevice) {
+        this.inputDevice = inputDevice;
+        configureBindings();
     }
 }

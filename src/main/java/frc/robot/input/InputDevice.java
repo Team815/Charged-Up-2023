@@ -3,11 +3,15 @@ package frc.robot.input;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 public interface InputDevice {
-    double getHorizontalSpeed();
+    double DEFAULT_MAX_SIDEWAYS_SPEED = 1d;
+    double DEFAULT_MAX_FORWARD_SPEED = 1d;
+    double DEFAULT_MAX_ANGULAR_SPEED = 1d;
 
-    double getVerticalSpeed();
+    double getSidewaysVelocity();
 
-    double getAngularSpeed();
+    double getForwardVelocity();
+
+    double getAngularVelocity();
 
     Trigger resetHeading();
 
@@ -16,10 +20,20 @@ public interface InputDevice {
     Trigger centerOnTarget();
 
     Trigger openClaw();
+
     Trigger setArmToTopCone();
+
     Trigger setArmToBottomCone();
+
     Trigger setArmToStationPickup();
+
     Trigger turtle();
+
     Trigger slow();
-    void setScale(double scale);
+
+    void setMaxSidewaysSpeed(double maxSidewaysSpeed);
+
+    void setMaxForwardSpeed(double maxForwardSpeed);
+
+    void setMaxAngularSpeed(double maxAngularSpeed);
 }
