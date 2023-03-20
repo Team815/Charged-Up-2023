@@ -80,11 +80,11 @@ public class SwerveDrive extends SubsystemBase {
             getSwerveModulePositions(modules));
     }
 
-    public void drive(double xSpeed, double ySpeed, double angularSpeed, double maxCorrectionSpeed) {
+    public void drive(double forwardVelocity, double sidewaysVelocity, double angularVelocity, double maxCorrectionSpeed) {
         var yaw = gyro.getYaw();
 
         var targetSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-            new ChassisSpeeds(xSpeed, ySpeed, angularSpeed),
+            new ChassisSpeeds(forwardVelocity, sidewaysVelocity, angularVelocity),
             Rotation2d.fromDegrees(yaw));
 
         var nextAngularSpeed = getNextSpeed(
@@ -183,8 +183,6 @@ public class SwerveDrive extends SubsystemBase {
             this);
     }
 
-    // Setters
-
     public void setAutoCorrectEnabled(boolean autoCorrectEnabled) {
         this.autoCorrectEnabled = autoCorrectEnabled;
         if (autoCorrectEnabled) {
@@ -203,8 +201,6 @@ public class SwerveDrive extends SubsystemBase {
     public void setMaxAngularAcceleration(double maxAngularAcceleration) {
         this.maxAngularAcceleration = maxAngularAcceleration;
     }
-
-    // Private
 
     private double autoCorrectRotation(
         double currentAngularSpeed,

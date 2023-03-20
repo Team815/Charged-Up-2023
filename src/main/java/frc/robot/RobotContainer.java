@@ -4,26 +4,16 @@
 
 package frc.robot;
 
-import edu.wpi.first.networktables.GenericEntry;
-import edu.wpi.first.networktables.NetworkTableEvent;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
-import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.CenterOnTarget;
 import frc.robot.input.InputDevice;
-import frc.robot.input.Joystick;
 import frc.robot.input.XboxController;
 import frc.robot.subsystems.SwerveDrive;
 import frc.robot.subsystems.SwerveModule;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
-
-import java.util.EnumSet;
-import java.util.Map;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -117,15 +107,15 @@ public class RobotContainer {
         inputDevice.centerOnTarget().whileTrue(new CenterOnTarget(
             swerveDrive,
             limelight::getHorizontalOffset,
-            () -> inputDevice.getVerticalSpeed(),
-            () -> inputDevice.getHorizontalSpeed(),
+            () -> inputDevice.getForwardVelocity(),
+            () -> inputDevice.getSidewaysVelocity(),
             0.02d));
 
         swerveDrive.setDefaultCommand(
             new RunCommand(() -> swerveDrive.drive(
-                inputDevice.getVerticalSpeed(),
-                inputDevice.getHorizontalSpeed(),
-                inputDevice.getAngularSpeed(),
+                inputDevice.getForwardVelocity(),
+                inputDevice.getSidewaysVelocity(),
+                inputDevice.getAngularVelocity(),
                 0.5d),
                 swerveDrive));
     }

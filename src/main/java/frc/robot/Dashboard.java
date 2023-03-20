@@ -96,7 +96,7 @@ public class Dashboard {
             e -> Arrays.stream(swerveModules).forEach(module -> module.setMaxAngularSpeed(e.valueData.value.getDouble())));
 
         var maxLinearRateEntry = layout
-            .add("Max Linear Rate", SwerveModule.DEFAULT_MAX_LINEAR_RATE)
+            .add("Max Linear Acceleration", SwerveModule.DEFAULT_MAX_LINEAR_ACCELERATION)
             .withPosition(0, 2)
             .getEntry();
         inst.addListener(
@@ -105,7 +105,7 @@ public class Dashboard {
             e -> Arrays.stream(swerveModules).forEach(module -> module.setMaxLinearAcceleration(e.valueData.value.getDouble())));
 
         var maxAngularRateEntry = layout
-            .add("Max Angular Rate", SwerveModule.DEFAULT_MAX_ANGULAR_RATE)
+            .add("Max Angular Acceleration", SwerveModule.DEFAULT_MAX_ANGULAR_ACCELERATION)
             .withPosition(0, 3)
             .getEntry();
         inst.addListener(
@@ -154,22 +154,22 @@ public class Dashboard {
             });
 
         var maxTeleopXSpeedEntry = layout
-            .add("Max Vertical Speed", InputDevice.DEFAULT_MAX_VERTICAL_SPEED)
+            .add("Max Forward Speed", InputDevice.DEFAULT_MAX_FORWARD_SPEED)
             .withPosition(0, 1)
             .getEntry();
         inst.addListener(
             maxTeleopXSpeedEntry,
             EnumSet.of(NetworkTableEvent.Kind.kValueAll),
-            e -> inputDeviceSupplier.get().setMaxVerticalSpeed(e.valueData.value.getDouble()));
+            e -> inputDeviceSupplier.get().setMaxForwardSpeed(e.valueData.value.getDouble()));
 
         var maxTeleopYSpeedEntry = layout
-            .add("Max Horizontal Speed", InputDevice.DEFAULT_MAX_HORIZONTAL_SPEED)
+            .add("Max Sideways Speed", InputDevice.DEFAULT_MAX_SIDEWAYS_SPEED)
             .withPosition(0, 2)
             .getEntry();
         inst.addListener(
             maxTeleopYSpeedEntry,
             EnumSet.of(NetworkTableEvent.Kind.kValueAll),
-            e -> inputDeviceSupplier.get().setMaxHorizontalSpeed(e.valueData.value.getDouble()));
+            e -> inputDeviceSupplier.get().setMaxSidewaysSpeed(e.valueData.value.getDouble()));
 
         var maxTeleopAngularSpeedEntry = layout
             .add("Max Angular Speed", InputDevice.DEFAULT_MAX_ANGULAR_SPEED)

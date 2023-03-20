@@ -12,17 +12,17 @@ public class Joystick extends CommandJoystick implements InputDevice {
     }
 
     @Override
-    public double getHorizontalSpeed() {
+    public double getSidewaysVelocity() {
         return MathUtil.applyDeadband(-getX(), DEADBAND);
     }
 
     @Override
-    public double getVerticalSpeed() {
+    public double getForwardVelocity() {
         return MathUtil.applyDeadband(-getY(), DEADBAND);
     }
 
     @Override
-    public double getAngularSpeed() {
+    public double getAngularVelocity() {
         return MathUtil.applyDeadband(getTwist(), DEADBAND);
     }
 
@@ -42,11 +42,11 @@ public class Joystick extends CommandJoystick implements InputDevice {
     }
 
     @Override
-    public void setMaxHorizontalSpeed(double maxHorizontalSpeed) {
+    public void setMaxSidewaysSpeed(double maxSidewaysSpeed) {
     }
 
     @Override
-    public void setMaxVerticalSpeed(double maxVerticalSpeed) {
+    public void setMaxForwardSpeed(double maxForwardSpeed) {
     }
 
     @Override

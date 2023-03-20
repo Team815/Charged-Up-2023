@@ -5,8 +5,8 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 public class XboxController extends CommandXboxController implements InputDevice {
-    private double maxHorizontalSpeed = DEFAULT_MAX_HORIZONTAL_SPEED;
-    private double maxVerticalSpeed = DEFAULT_MAX_VERTICAL_SPEED;
+    private double maxSidewaysSpeed = DEFAULT_MAX_SIDEWAYS_SPEED;
+    private double maxForwardSpeed = DEFAULT_MAX_FORWARD_SPEED;
     private double maxAngularSpeed = DEFAULT_MAX_ANGULAR_SPEED;
     private static final double DEADBAND = 0.15d;
 
@@ -15,17 +15,17 @@ public class XboxController extends CommandXboxController implements InputDevice
     }
 
     @Override
-    public double getHorizontalSpeed() {
-        return MathUtil.applyDeadband(-getLeftX(), DEADBAND) * maxHorizontalSpeed;
+    public double getSidewaysVelocity() {
+        return MathUtil.applyDeadband(-getLeftX(), DEADBAND) * maxSidewaysSpeed;
     }
 
     @Override
-    public double getVerticalSpeed() {
-        return MathUtil.applyDeadband(-getLeftY(), DEADBAND) * maxVerticalSpeed;
+    public double getForwardVelocity() {
+        return MathUtil.applyDeadband(-getLeftY(), DEADBAND) * maxForwardSpeed;
     }
 
     @Override
-    public double getAngularSpeed() {
+    public double getAngularVelocity() {
         return MathUtil.applyDeadband(-getRightX(), DEADBAND) * maxAngularSpeed;
     }
 
@@ -36,22 +36,22 @@ public class XboxController extends CommandXboxController implements InputDevice
 
     @Override
     public Trigger cycleLimelightTarget() {
-        return leftBumper();
-    }
-
-    @Override
-    public Trigger centerOnTarget() {
         return rightBumper();
     }
 
     @Override
-    public void setMaxHorizontalSpeed(double maxHorizontalSpeed) {
-        this.maxHorizontalSpeed = MathUtil.clamp(Math.abs(maxHorizontalSpeed), 0, 1);
+    public Trigger centerOnTarget() {
+        return leftBumper();
     }
 
     @Override
-    public void setMaxVerticalSpeed(double maxVerticalSpeed) {
-        this.maxVerticalSpeed = MathUtil.clamp(Math.abs(maxVerticalSpeed), 0, 1);
+    public void setMaxSidewaysSpeed(double maxSidewaysSpeed) {
+        this.maxSidewaysSpeed = MathUtil.clamp(Math.abs(maxSidewaysSpeed), 0, 1);
+    }
+
+    @Override
+    public void setMaxForwardSpeed(double maxForwardSpeed) {
+        this.maxForwardSpeed = MathUtil.clamp(Math.abs(maxForwardSpeed), 0, 1);
     }
 
     @Override

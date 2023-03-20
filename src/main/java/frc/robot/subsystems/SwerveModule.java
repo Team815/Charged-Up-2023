@@ -13,27 +13,26 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 
-/**
- * Add your docs here.
- */
 public class SwerveModule {
     public static final double DEFAULT_MAX_LINEAR_SPEED = 1d;
     public static final double DEFAULT_MAX_ANGULAR_SPEED = 0.2d;
-    public static final double DEFAULT_MAX_LINEAR_RATE = 0.1d;
-    public static final double DEFAULT_MAX_ANGULAR_RATE = 0.1d;
+    public static final double DEFAULT_MAX_LINEAR_ACCELERATION = 0.1d;
+    public static final double DEFAULT_MAX_ANGULAR_ACCELERATION = 0.1d;
     public static final double DEFAULT_P = 0.015d;
     private double maxLinearSpeed = DEFAULT_MAX_LINEAR_SPEED;
     private double maxAngularSpeed = DEFAULT_MAX_ANGULAR_SPEED;
     private final CANSparkMax linearController;
     private final CANSparkMax angularController;
     private final CANCoder rotateSensor;
-    private final PIDController pid = new PIDController(DEFAULT_P, 0d, 0d);;
+    private final PIDController pid = new PIDController(DEFAULT_P, 0d, 0d);
 
     public SwerveModule(int spinControllerID, int rotateControllerID, int rotateSensorID, double angularOffset) {
         linearController = new CANSparkMax(spinControllerID, MotorType.kBrushless);
         angularController = new CANSparkMax(rotateControllerID, MotorType.kBrushless);
         linearController.restoreFactoryDefaults();
         angularController.restoreFactoryDefaults();
+        setMaxLinearAcceleration(DEFAULT_MAX_LINEAR_ACCELERATION);
+        setMaxAngularAcceleration(DEFAULT_MAX_ANGULAR_ACCELERATION);
         rotateSensor = new CANCoder(rotateSensorID);
         rotateSensor.configFactoryDefault();
         rotateSensor.configMagnetOffset(angularOffset);
@@ -57,14 +56,12 @@ public class SwerveModule {
             Rotation2d.fromDegrees(rotateSensor.getAbsolutePosition()));
     }
 
-    // Setters
-
     public void setMaxLinearSpeed(double maxLinearSpeed) {
-        this.maxLinearSpeed = Math.abs(maxLinearSpeed);
+        this.maxLinearSpeed = MathUtil.clamp(Math.abs(maxLinearSpeed), 0, 1);
     }
 
     public void setMaxAngularSpeed(double maxAngularSpeed) {
-        this.maxAngularSpeed = Math.abs(maxAngularSpeed);
+        this.maxAngularSpeed = MathUtil.clamp(Math.abs(maxAngularSpeed), 0, 1);
     }
 
     public void setP(double p) {
@@ -72,14 +69,12 @@ public class SwerveModule {
     }
 
     public void setMaxLinearAcceleration(double maxLinearAcceleration) {
-        linearController.setOpenLoopRampRate(maxLinearAcceleration);
+        linearController.setOpenLoopRampRate(Math.abs(maxLinearAcceleration));
     }
 
     public void setMaxAngularAcceleration(double maxAngularAcceleration) {
-        angularController.setOpenLoopRampRate(maxAngularAcceleration);
+        angularController.setOpenLoopRampRate(Math.abs(maxAngularAcceleration));
     }
-
-    // Private
 
     private SwerveModuleState optimize(SwerveModuleState state) {
         return SwerveModuleState.optimize(
