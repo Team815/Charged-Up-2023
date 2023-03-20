@@ -6,18 +6,25 @@ import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import frc.robot.input.InputDevice;
+import frc.robot.input.Joystick;
+import frc.robot.input.XboxController;
 import frc.robot.subsystems.SwerveDrive;
 import frc.robot.subsystems.SwerveModule;
 
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Map;
+import java.util.function.Supplier;
 
 public class Dashboard {
-    public Dashboard(String tabName, SwerveDrive swerveDrive, SwerveModule... swerveModules) {
+    public Dashboard(String tabName, SwerveDrive swerveDrive, GamePieceLimelight limelight, Supplier<InputDevice> inputDeviceSupplier, RobotContainer container, SwerveModule... swerveModules) {
         var tab = Shuffleboard.getTab(tabName);
         var inst = NetworkTableInstance.getDefault();
         createSwerveModuleLayout(tab, inst, swerveModules);
+        createSwerveDriveLayout(tab, inst, swerveDrive);
+        createLimelightLayout(tab, limelight);
+        createControllerLayout(tab, inst, inputDeviceSupplier, container);
     }
 
     private void createSwerveDriveLayout(ShuffleboardTab tab, NetworkTableInstance inst, SwerveDrive swerveDrive) {
@@ -55,7 +62,7 @@ public class Dashboard {
             e -> swerveDrive.setMaxLinearAcceleration(e.valueData.value.getDouble()));
 
         var maxAngularAccelerationEntry = layout
-            .add("Max Angular Acceleration", swerveDrive.DEFAULT_MAX_ANGULAR_ACCELERATION)
+            .add("Max Angular Acceleration", SwerveDrive.DEFAULT_MAX_ANGULAR_ACCELERATION)
             .withPosition(0, 3)
             .getEntry();
         inst.addListener(
@@ -114,5 +121,63 @@ public class Dashboard {
             pEntry,
             EnumSet.of(NetworkTableEvent.Kind.kValueAll),
             e -> Arrays.stream(swerveModules).forEach(module -> module.setP(e.valueData.value.getDouble())));
+    }
+
+    private void createLimelightLayout(ShuffleboardTab tab, GamePieceLimelight limelight) {
+        var layout = tab
+            .getLayout("Limelight", BuiltInLayouts.kGrid)
+            .withSize(2, 1)
+            .withProperties(Map.of("Label position", "LEFT", "Number of columns", 1, "Number of rows", 2));
+
+        layout
+            .addString("Target", limelight::getTarget)
+            .withPosition(0, 0);
+    }
+
+    private void createControllerLayout(ShuffleboardTab tab, NetworkTableInstance inst, Supplier<InputDevice> inputDeviceSupplier, RobotContainer container) {
+        var layout = tab
+            .getLayout("Teleop", BuiltInLayouts.kGrid)
+            .withSize(2, 2)
+            .withProperties(Map.of("Label position", "LEFT", "Number of columns", 1, "Number of rows", 4));
+
+        var inputDeviceChoiceEntry = layout
+            .add("Joystick <-> Xbox Controller", true)
+            .withWidget(BuiltInWidgets.kToggleSwitch)
+            .withPosition(0, 0)
+            .getEntry();
+        inst.addListener(
+            inputDeviceChoiceEntry,
+            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
+            e -> {
+                var useXboxController = e.valueData.value.getBoolean();
+                container.setInputDevice(useXboxController ? new XboxController() : new Joystick());
+            });
+
+        var maxTeleopXSpeedEntry = layout
+            .add("Max Vertical Speed", InputDevice.DEFAULT_MAX_VERTICAL_SPEED)
+            .withPosition(0, 1)
+            .getEntry();
+        inst.addListener(
+            maxTeleopXSpeedEntry,
+            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
+            e -> inputDeviceSupplier.get().setMaxVerticalSpeed(e.valueData.value.getDouble()));
+
+        var maxTeleopYSpeedEntry = layout
+            .add("Max Horizontal Speed", InputDevice.DEFAULT_MAX_HORIZONTAL_SPEED)
+            .withPosition(0, 2)
+            .getEntry();
+        inst.addListener(
+            maxTeleopYSpeedEntry,
+            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
+            e -> inputDeviceSupplier.get().setMaxHorizontalSpeed(e.valueData.value.getDouble()));
+
+        var maxTeleopAngularSpeedEntry = layout
+            .add("Max Angular Speed", InputDevice.DEFAULT_MAX_ANGULAR_SPEED)
+            .withPosition(0, 3)
+            .getEntry();
+        inst.addListener(
+            maxTeleopAngularSpeedEntry,
+            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
+            e -> inputDeviceSupplier.get().setMaxAngularSpeed(e.valueData.value.getDouble()));
     }
 }

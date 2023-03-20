@@ -11,14 +11,11 @@ import java.util.EnumSet;
 import java.util.Map;
 
 public class GamePieceLimelight extends Limelight {
-
-    private double p;
-    private GenericEntry pEntry;
+    public static final Target DEFAULT_TARGET = Target.Cone;
 
     private enum Target {
         Cube(0),
-        Cone(1),
-        ConeNode(2);
+        Cone(1);
 
         private final int pipeline;
 
@@ -27,39 +24,23 @@ public class GamePieceLimelight extends Limelight {
         }
     }
 
-    private Target target = Target.Cone;
+    private Target target;
 
     public GamePieceLimelight(String instance) {
         super(instance);
-        p = 0.02d;
-        setPipeline(target.pipeline);
-        var tab = Shuffleboard.getTab("SmartDashboard");
-        var layout = tab
-            .getLayout("Limelight", BuiltInLayouts.kGrid)
-            .withSize(2, 1)
-            .withProperties(Map.of("Label position", "LEFT", "Number of columns", 1, "Number of rows", 2));
-        layout
-            .addString("Target", () -> target.toString())
-            .withPosition(0, 0);
-        pEntry = layout
-            .add("P", p)
-            .withPosition(0, 1)
-            .getEntry();
-        var inst = NetworkTableInstance.getDefault();
-        inst.addListener(
-            pEntry,
-            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
-            e -> p = e.valueData.value.getDouble());
+        setTarget(DEFAULT_TARGET);
     }
 
     public void cycleTarget() {
-        target = target == Target.Cube ? Target.Cone :
-            target == Target.Cone ? Target.ConeNode :
-                Target.Cube;
-        setPipeline(target.pipeline);
+        setTarget(target == Target.Cube ? Target.Cone : Target.Cube);
     }
 
-    public double getP() {
-        return p;
+    public String getTarget() {
+        return target.toString();
+    }
+
+    private void setTarget(Target target) {
+        this.target = target;
+        setPipeline(target.pipeline);
     }
 }

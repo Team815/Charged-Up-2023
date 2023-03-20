@@ -40,4 +40,16 @@ public class Joystick extends CommandJoystick implements InputDevice {
     public Trigger centerOnTarget() {
         return button(1);
     }
+
+    @Override
+    public void setMaxHorizontalSpeed(double maxHorizontalSpeed) {
+    }
+
+    @Override
+    public void setMaxVerticalSpeed(double maxVerticalSpeed) {
+    }
+
+    @Override
+    public void setMaxAngularSpeed(double maxAngularSpeed) {
+    }
 }

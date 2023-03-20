@@ -33,45 +33,9 @@ import java.util.Map;
  */
 public class RobotContainer {
     private InputDevice inputDevice;
-    private static final GenericEntry inputDeviceChoiceEntry;
-    private static double maxTeleopXSpeed;
-    private static double maxTeleopYSpeed;
-    private static double maxTeleopAngularSpeed;
-    private static final GenericEntry maxTeleopXSpeedEntry;
-    private static final GenericEntry maxTeleopYSpeedEntry;
-    private static final GenericEntry maxTeleopAngularSpeedEntry;
-
     private final SwerveDrive swerveDrive;
     private final GamePieceLimelight limelight;
-    Dashboard shuffleboard;
-
-    static {
-        maxTeleopXSpeed = 1d;
-        maxTeleopYSpeed = 1d;
-        maxTeleopAngularSpeed = 1d;
-        var tab = Shuffleboard.getTab("SmartDashboard");
-        var layout = tab
-            .getLayout("Teleop", BuiltInLayouts.kGrid)
-            .withSize(2, 2)
-            .withProperties(Map.of("Label position", "LEFT", "Number of columns", 1, "Number of rows", 4));
-        inputDeviceChoiceEntry = layout
-            .add("Joystick <-> Xbox Controller", true)
-            .withWidget(BuiltInWidgets.kToggleSwitch)
-            .withPosition(0, 0)
-            .getEntry();
-        maxTeleopXSpeedEntry = layout
-            .add("Max Vertical Speed", maxTeleopXSpeed)
-            .withPosition(0, 1)
-            .getEntry();
-        maxTeleopYSpeedEntry = layout
-            .add("Max Horizontal Speed", maxTeleopYSpeed)
-            .withPosition(0, 2)
-            .getEntry();
-        maxTeleopAngularSpeedEntry = layout
-            .add("Max Angular Speed", maxTeleopAngularSpeed)
-            .withPosition(0, 3)
-            .getEntry();
-    }
+    private final Dashboard shuffleboard;
 
     /**
      * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -120,39 +84,19 @@ public class RobotContainer {
             backRightAngularOffset);
 
         swerveDrive = new SwerveDrive(moduleFrontLeft, moduleFrontRight, moduleBackLeft, moduleBackRight);
+        limelight = new GamePieceLimelight("limelight-field");
+        inputDevice = new XboxController();
 
         shuffleboard = new Dashboard(
             "SmartDashboard",
             swerveDrive,
+            limelight,
+            () -> inputDevice,
+            this,
             moduleFrontLeft,
             moduleFrontRight,
             moduleBackLeft,
             moduleBackRight);
-
-        limelight = new GamePieceLimelight("limelight-field");
-        inputDevice = new XboxController();
-
-        var inst = NetworkTableInstance.getDefault();
-        inst.addListener(
-            inputDeviceChoiceEntry,
-            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
-            e -> {
-                var useXboxController = e.valueData.value.getBoolean();
-                inputDevice = useXboxController ? new XboxController() : new Joystick();
-                configureBindings();
-            });
-        inst.addListener(
-            maxTeleopXSpeedEntry,
-            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
-            e -> maxTeleopXSpeed = e.valueData.value.getDouble());
-        inst.addListener(
-            maxTeleopYSpeedEntry,
-            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
-            e -> maxTeleopYSpeed = e.valueData.value.getDouble());
-        inst.addListener(
-            maxTeleopAngularSpeedEntry,
-            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
-            e -> maxTeleopAngularSpeed = e.valueData.value.getDouble());
 
         // Configure the trigger bindings
         configureBindings();
@@ -173,23 +117,15 @@ public class RobotContainer {
         inputDevice.centerOnTarget().whileTrue(new CenterOnTarget(
             swerveDrive,
             limelight::getHorizontalOffset,
-            () -> inputDevice.getVerticalSpeed() * maxTeleopXSpeed,
-            () -> inputDevice.getHorizontalSpeed() * maxTeleopYSpeed,
-            limelight.getP()));
+            () -> inputDevice.getVerticalSpeed(),
+            () -> inputDevice.getHorizontalSpeed(),
+            0.02d));
 
-
-        // The robot assumes positive vertical direction is forward,
-        // but the controller positive vertical direction is down (backward).
-        // Therefore, we must negate the left joystick's Y direction.
-        //
-        // The robot also assumes positive sideways direction is to the left,
-        // but the controller positive sideways direction is to the right.
-        // Therefore, we must negate the left joystick's X direction.
         swerveDrive.setDefaultCommand(
             new RunCommand(() -> swerveDrive.drive(
-                inputDevice.getVerticalSpeed() * maxTeleopXSpeed,
-                inputDevice.getHorizontalSpeed() * maxTeleopYSpeed,
-                inputDevice.getAngularSpeed() * maxTeleopAngularSpeed,
+                inputDevice.getVerticalSpeed(),
+                inputDevice.getHorizontalSpeed(),
+                inputDevice.getAngularSpeed(),
                 0.5d),
                 swerveDrive));
     }
@@ -203,5 +139,10 @@ public class RobotContainer {
         //return new RunCommand(() -> swerveDrive.drive(0.1, 0, 0, 0.5), swerveDrive);
         // An example command will be run in autonomous
         return swerveDrive.auton1();
+    }
+
+    public void setInputDevice(InputDevice inputDevice) {
+        this.inputDevice = inputDevice;
+        configureBindings();
     }
 }
