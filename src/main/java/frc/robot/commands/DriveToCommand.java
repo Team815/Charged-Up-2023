@@ -10,7 +10,8 @@ public class DriveToCommand extends CommandBase {
 
     private final SwerveDrive swerveDrive;
     private final Pose2d target;
-    private final PIDController pid;
+    private final PIDController linearPid;
+    private final PIDController angularPid;
     private final double maxLinearSpeed;
     private final double maxAngularSpeed;
 
@@ -18,8 +19,11 @@ public class DriveToCommand extends CommandBase {
         super();
         this.target = target;
         this.swerveDrive = swerveDrive;
-        pid = new PIDController(0.08d, 0d, 0d);
-        pid.setTolerance(0.5d);
+        linearPid = new PIDController(0.03d, 0.001d, 0d);
+        angularPid = new PIDController(0.01d, 0d, 0d);
+        angularPid.enableContinuousInput(0d, 360d);
+        angularPid.setTolerance(4d);
+        angularPid.setSetpoint(target.getRotation().getDegrees());
         this.maxLinearSpeed = maxLinearSpeed;
         this.maxAngularSpeed = maxAngularSpeed;
         addRequirements(swerveDrive);
@@ -27,7 +31,6 @@ public class DriveToCommand extends CommandBase {
 
     @Override
     public void initialize() {
-        pid.reset();
         swerveDrive.setAngle(target.getRotation().getDegrees());
     }
 
@@ -35,21 +38,14 @@ public class DriveToCommand extends CommandBase {
     public void execute() {
         var pose = swerveDrive.getPose();
         var difference = target.minus(swerveDrive.getPose()).getTranslation();
-        var response = Math.min(-pid.calculate(difference.getNorm()), maxLinearSpeed);
-        var speed = new Translation2d(response, difference.getAngle().rotateBy(pose.getRotation()));
-        swerveDrive.drive(speed.getX(), speed.getY(), 0d, maxAngularSpeed);
+        var linearResponse = Math.min(-linearPid.calculate(difference.getNorm()), maxLinearSpeed);
+        var linearSpeed = new Translation2d(linearResponse, difference.getAngle().rotateBy(pose.getRotation()));
+        var angularResponse = angularPid.calculate(swerveDrive.getAngles().getYaw());
+        swerveDrive.drive(linearSpeed.getX(), linearSpeed.getY(), angularResponse, maxAngularSpeed);
     }
 
     @Override
     public boolean isFinished() {
-        return pid.atSetpoint();
-    }
-
-    @Override
-    public void end(boolean interrupted) {
-        if (!interrupted) {
-            System.out.println("DriveTo finished");
-        }
-        swerveDrive.drive(0, 0, 0, 0d);
+        return linearPid.atSetpoint() && angularPid.atSetpoint();
     }
 }

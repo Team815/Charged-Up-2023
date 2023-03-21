@@ -1,14 +1,16 @@
 package frc.robot;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.networktables.NetworkTableEvent;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
-import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import frc.robot.input.InputDevice;
 import frc.robot.input.Joystick;
 import frc.robot.input.XboxController;
+import frc.robot.subsystems.GyroAngles;
 import frc.robot.subsystems.SwerveDrive;
 import frc.robot.subsystems.SwerveModule;
 
@@ -17,20 +19,17 @@ import java.util.EnumSet;
 import java.util.Map;
 import java.util.function.Supplier;
 
-public class Dashboard {
-    public Dashboard(String tabName, SwerveDrive swerveDrive, GamePieceLimelight limelight, Supplier<InputDevice> inputDeviceSupplier, RobotContainer container, SwerveModule... swerveModules) {
-        var tab = Shuffleboard.getTab(tabName);
-        var inst = NetworkTableInstance.getDefault();
-        createSwerveModuleLayout(tab, inst, swerveModules);
-        createSwerveDriveLayout(tab, inst, swerveDrive);
-        createLimelightLayout(tab, limelight);
-        createControllerLayout(tab, inst, inputDeviceSupplier, container);
+public final class Dashboard {
+    private Dashboard() {
+        throw new AssertionError("utility class");
     }
 
-    private void createSwerveDriveLayout(ShuffleboardTab tab, NetworkTableInstance inst, SwerveDrive swerveDrive) {
-        var layout = tab
+    public static void createSwerveDriveLayout(String tabName, int column, int row, SwerveDrive swerveDrive) {
+        var inst = NetworkTableInstance.getDefault();
+        var layout = Shuffleboard.getTab(tabName)
             .getLayout("Swerve Drive", BuiltInLayouts.kGrid)
             .withSize(2, 2)
+            .withPosition(column, row)
             .withProperties(Map.of("Label position", "LEFT", "Number of columns", 1, "Number of rows", 4));
 
         var autoCorrectEnabledEntry = layout
@@ -71,10 +70,12 @@ public class Dashboard {
             e -> swerveDrive.setMaxAngularAcceleration(e.valueData.value.getDouble()));
     }
 
-    private void createSwerveModuleLayout(ShuffleboardTab tab, NetworkTableInstance inst, SwerveModule[] swerveModules) {
-        var layout = tab
+    public static void createSwerveModuleLayout(String tabName, int column, int row, SwerveModule... swerveModules) {
+        var inst = NetworkTableInstance.getDefault();
+        var layout = Shuffleboard.getTab(tabName)
             .getLayout("Swerve Modules", BuiltInLayouts.kGrid)
             .withSize(2, 2)
+            .withPosition(column, row)
             .withProperties(Map.of("Label position", "LEFT", "Number of columns", 1, "Number of rows", 5));
 
         var maxLinearSpeedEntry = layout
@@ -123,10 +124,11 @@ public class Dashboard {
             e -> Arrays.stream(swerveModules).forEach(module -> module.setP(e.valueData.value.getDouble())));
     }
 
-    private void createLimelightLayout(ShuffleboardTab tab, GamePieceLimelight limelight) {
-        var layout = tab
+    public static void createLimelightLayout(String tabName, int column, int row, GamePieceLimelight limelight) {
+        var layout = Shuffleboard.getTab(tabName)
             .getLayout("Limelight", BuiltInLayouts.kGrid)
             .withSize(2, 1)
+            .withPosition(column, row)
             .withProperties(Map.of("Label position", "LEFT", "Number of columns", 1, "Number of rows", 2));
 
         layout
@@ -134,10 +136,12 @@ public class Dashboard {
             .withPosition(0, 0);
     }
 
-    private void createControllerLayout(ShuffleboardTab tab, NetworkTableInstance inst, Supplier<InputDevice> inputDeviceSupplier, RobotContainer container) {
-        var layout = tab
+    public static void createControllerLayout(String tabName, int column, int row, Supplier<InputDevice> inputDeviceSupplier, RobotContainer container) {
+        var inst = NetworkTableInstance.getDefault();
+        var layout = Shuffleboard.getTab(tabName)
             .getLayout("Teleop", BuiltInLayouts.kGrid)
             .withSize(2, 2)
+            .withPosition(column, row)
             .withProperties(Map.of("Label position", "LEFT", "Number of columns", 1, "Number of rows", 4));
 
         var inputDeviceChoiceEntry = layout
@@ -179,5 +183,59 @@ public class Dashboard {
             maxTeleopAngularSpeedEntry,
             EnumSet.of(NetworkTableEvent.Kind.kValueAll),
             e -> inputDeviceSupplier.get().setMaxAngularSpeed(e.valueData.value.getDouble()));
+    }
+
+    public static void createPoseLayout(String tabName, int column, int row, Supplier<Pose2d> pose) {
+        var layout = Shuffleboard.getTab(tabName)
+            .getLayout("Pose", BuiltInLayouts.kGrid)
+            .withSize(2, 2)
+            .withPosition(column, row)
+            .withProperties(Map.of("Label position", "LEFT", "Number of columns", 1, "Number of rows", 3));
+
+        layout
+            .addString("Forward Position", () -> String.format("%.2f", pose.get().getX()))
+            .withPosition(0, 0);
+        layout
+            .addString("Sideways Position", () -> String.format("%.2f", pose.get().getY()))
+            .withPosition(0, 1);
+        layout
+            .addString("Angular Position", () -> String.format("%.2f", pose.get().getRotation().getDegrees()))
+            .withPosition(0, 2);
+    }
+
+    public static void createAnglesLayout(String tabName, int column, int row, Supplier<GyroAngles> angles) {
+        var layout = Shuffleboard.getTab(tabName)
+            .getLayout("Angles", BuiltInLayouts.kGrid)
+            .withSize(2, 2)
+            .withPosition(column, row)
+            .withProperties(Map.of("Label position", "LEFT", "Number of columns", 1, "Number of rows", 3));
+
+        layout
+            .addString("Pitch", () -> String.format("%.2f", angles.get().getPitch()))
+            .withPosition(0, 0);
+        layout
+            .addString("Roll", () -> String.format("%.2f", angles.get().getRoll()))
+            .withPosition(0, 1);
+        layout
+            .addString("Yaw", () -> String.format("%.2f", angles.get().getYaw()))
+            .withPosition(0, 2);
+    }
+
+    public static void createVelocityLayout(String tabName, int column, int row, Supplier<ChassisSpeeds> speeds) {
+        var layout = Shuffleboard.getTab(tabName)
+            .getLayout("Velocity", BuiltInLayouts.kGrid)
+            .withSize(2, 2)
+            .withPosition(column, row)
+            .withProperties(Map.of("Label position", "LEFT", "Number of columns", 1, "Number of rows", 3));
+
+        layout
+            .addString("Forward Velocity", () -> String.format("%.2f", speeds.get().vxMetersPerSecond))
+            .withPosition(0, 0);
+        layout
+            .addString("Sideways Velocity", () -> String.format("%.2f", speeds.get().vyMetersPerSecond))
+            .withPosition(0, 1);
+        layout
+            .addString("Angular Velocity", () -> String.format("%.2f", speeds.get().omegaRadiansPerSecond))
+            .withPosition(0, 2);
     }
 }

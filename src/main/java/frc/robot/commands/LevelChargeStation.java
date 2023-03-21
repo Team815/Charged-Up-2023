@@ -24,7 +24,7 @@ public class LevelChargeStation extends CommandBase {
     @Override
     public void execute() {
         final var threshold = 0d;
-        var level = swerveDrive.getLevel();
+        var level = swerveDrive.getAngles().getRoll();
         if (levels.isFull()) {
             var range = levels.range();
             var largestLevel = Math.abs(range.getFirst()) > Math.abs(range.getSecond()) ? range.getFirst() : range.getSecond();

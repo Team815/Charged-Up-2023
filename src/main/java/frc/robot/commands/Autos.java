@@ -66,6 +66,16 @@ public final class Autos {
         return scoreCrossLevel(swerveDrive, shoulder, arm, claw, -1);
     }
 
+    public static CommandBase scoreCrossLevelCenter(SwerveDrive swerveDrive, Shoulder shoulder, Arm arm, Claw claw) {
+        var driveCom = new SwerveDriveCommander(swerveDrive);
+        return score(swerveDrive, shoulder, arm, claw)
+            .andThen(
+                driveCom.driveTo(0 ,0, 90, 0.2, 0.2),
+                driveCom.driveTo(90, 0, 90, .4, .4),
+                driveCom.driveTo(50, 0, 90, .3, .3),
+                driveCom.level());
+    }
+
     public static CommandBase test(SwerveDrive swerveDrive) {
         return new InstantCommand(swerveDrive::resetPose)
             .andThen(new InstantCommand(() -> swerveDrive.resetGyro(90d)))

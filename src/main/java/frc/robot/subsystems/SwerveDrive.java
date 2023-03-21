@@ -129,6 +129,10 @@ public class SwerveDrive extends SubsystemBase {
         return odometry.getPoseMeters();
     }
 
+    public ChassisSpeeds getSpeeds() {
+        return currentSpeeds;
+    }
+
     public DriveToCommand driveTo(
         double x,
         double y,
@@ -147,8 +151,8 @@ public class SwerveDrive extends SubsystemBase {
         pidRotation.setSetpoint(angle);
     }
 
-    public double getLevel() {
-        return gyro.getRoll();
+    public GyroAngles getAngles() {
+        return new GyroAngles(gyro.getPitch(), gyro.getRoll(), gyro.getYaw());
     }
 
     public CommandBase MySwerveControllerCommand() {

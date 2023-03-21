@@ -35,14 +35,14 @@ public class RobotContainer {
     private final GamePieceLimelight limelight;
     private final Arm arm;
     private final Shoulder shoulder;
-    private final Dashboard shuffleboard;
 
     static {
         autonChooser = new SendableChooser<>();
         autonChooser.setDefaultOption("ScoreCross", 0);
         autonChooser.addOption("ScoreCrossLevelRight", 1);
         autonChooser.addOption("ScoreCrossLevelLeft", 2);
-        autonChooser.addOption("Test", 3);
+        autonChooser.addOption("ScoreCrossLevelCenter", 3);
+        autonChooser.addOption("Test", 4);
         var tab = Shuffleboard.getTab("SmartDashboard");
         var layout = tab
             .getLayout("Robot", BuiltInLayouts.kGrid)
@@ -76,6 +76,9 @@ public class RobotContainer {
         final var backLeftAngularOffset = -146.5d;
         final var backRightAngularOffset = -11.5d;
 
+        var configTab = "Config";
+        var readingsTab = "Readings";
+
         var moduleFrontLeft = new SwerveModule(
             frontLeftSpinId,
             frontLeftRotateId,
@@ -102,7 +105,6 @@ public class RobotContainer {
 
         swerveDrive = new SwerveDrive(moduleFrontLeft, moduleFrontRight, moduleBackLeft, moduleBackRight);
 
-
         final var compressorPort = 30;
         final var solenoidChannel = 0;
 
@@ -112,6 +114,7 @@ public class RobotContainer {
         );
 
         limelight = new GamePieceLimelight("limelight-field");
+
         inputDevice = new XboxController();
 
         var verticalMotorMainId = 9;
@@ -121,18 +124,19 @@ public class RobotContainer {
         arm = new Arm(verticalMotorMainId, verticalMotorSecondaryId);
         shoulder = new Shoulder(horizontalMotorId);
 
-        shuffleboard = new Dashboard(
-            "SmartDashboard",
-            swerveDrive,
-            limelight,
-            () -> inputDevice,
-            this,
-            moduleFrontLeft,
-            moduleFrontRight,
-            moduleBackLeft,
-            moduleBackRight);
+        // Shuffleboard config tab
 
-        // Configure the trigger bindings
+        Dashboard.createSwerveModuleLayout(configTab, 0, 0, moduleFrontLeft, moduleFrontRight, moduleBackLeft, moduleBackRight);
+        Dashboard.createSwerveDriveLayout(configTab, 0, 2, swerveDrive);
+        Dashboard.createControllerLayout(configTab, 2, 0, () -> inputDevice, this);
+
+        // Shuffleboard readings tab
+
+        Dashboard.createPoseLayout(readingsTab, 0, 0, swerveDrive::getPose);
+        Dashboard.createVelocityLayout(readingsTab, 0, 2, swerveDrive::getSpeeds);
+        Dashboard.createAnglesLayout(readingsTab, 2, 0, swerveDrive::getAngles);
+        Dashboard.createLimelightLayout(readingsTab, 2, 2, limelight);
+
         configureBindings();
     }
 
@@ -242,7 +246,8 @@ public class RobotContainer {
         var autonIndex = autonChooser.getSelected();
         var auton = autonIndex == 1 ? Autos.scoreCrossLevelRight(swerveDrive, shoulder, arm, claw)
             : autonIndex == 2 ? Autos.scoreCrossLevelLeft(swerveDrive, shoulder, arm, claw)
-            : autonIndex == 3 ? Autos.test(swerveDrive)
+            : autonIndex == 3 ? Autos.scoreCrossLevelCenter(swerveDrive, shoulder, arm, claw)
+            : autonIndex == 4 ? Autos.test(swerveDrive)
             : Autos.scoreCross(swerveDrive, shoulder, arm, claw);
         return new InstantCommand(arm::zeroEncoder)
             .andThen(auton);
