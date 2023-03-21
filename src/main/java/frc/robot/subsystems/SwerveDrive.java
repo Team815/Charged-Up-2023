@@ -112,6 +112,10 @@ public class SwerveDrive extends SubsystemBase {
         setSwerveModuleStates(states);
     }
 
+    public double getAngle() {
+        return gyro.getYaw();
+    }
+
     public void resetGyro(double offset) {
         gyro.setYaw(0d + offset);
         pidRotation.setSetpoint(0d);
@@ -126,6 +130,10 @@ public class SwerveDrive extends SubsystemBase {
 
     public Pose2d getPose() {
         return odometry.getPoseMeters();
+    }
+
+    public ChassisSpeeds getSpeeds() {
+        return currentSpeeds;
     }
 
     public CommandBase driveOntoChargeStation() {
@@ -150,7 +158,7 @@ public class SwerveDrive extends SubsystemBase {
     }
 
     public double getLevel() {
-        return gyro.getRoll();
+        return gyro.getPitch();
     }
 
     public CommandBase MySwerveControllerCommand() {
@@ -213,7 +221,7 @@ public class SwerveDrive extends SubsystemBase {
         } else if (currentAngularSpeed != 0d || timer.isRunning()) {
             setAngle(yaw);
         } else {
-            return MathUtil.clamp(-pidRotation.calculate(yaw), -limit, limit);
+            return MathUtil.clamp(pidRotation.calculate(yaw), -limit, limit);
         }
         return 0d;
     }

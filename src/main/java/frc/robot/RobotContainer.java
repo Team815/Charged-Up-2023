@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.commands.Autos;
 import frc.robot.commands.CenterOnTarget;
 import frc.robot.input.InputDevice;
 import frc.robot.input.XboxController;
@@ -25,7 +26,6 @@ public class RobotContainer {
     private InputDevice inputDevice;
     private final SwerveDrive swerveDrive;
     private final GamePieceLimelight limelight;
-    private final Dashboard shuffleboard;
 
     /**
      * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -48,6 +48,9 @@ public class RobotContainer {
         final var frontRightAngularOffset = -5d;
         final var backLeftAngularOffset = 98d;
         final var backRightAngularOffset = 171.5d;
+
+        var configTab = "Config";
+        var readingsTab = "Readings";
 
         var moduleFrontLeft = new SwerveModule(
             frontLeftSpinId,
@@ -73,20 +76,18 @@ public class RobotContainer {
             backRightRotateSensorId,
             backRightAngularOffset);
 
-        swerveDrive = new SwerveDrive(moduleFrontLeft, moduleFrontRight, moduleBackLeft, moduleBackRight);
-        limelight = new GamePieceLimelight("limelight-field");
-        inputDevice = new XboxController();
+        Dashboard.createSwerveModuleLayout(configTab, 0, 0, moduleFrontLeft, moduleFrontRight, moduleBackLeft, moduleBackRight);
 
-        shuffleboard = new Dashboard(
-            "SmartDashboard",
-            swerveDrive,
-            limelight,
-            () -> inputDevice,
-            this,
-            moduleFrontLeft,
-            moduleFrontRight,
-            moduleBackLeft,
-            moduleBackRight);
+        swerveDrive = new SwerveDrive(moduleFrontLeft, moduleFrontRight, moduleBackLeft, moduleBackRight);
+        Dashboard.createSwerveDriveLayout(configTab, 0, 2, swerveDrive);
+        Dashboard.createPoseLayout(readingsTab, 0, 0, swerveDrive::getPose);
+        Dashboard.createVelocityLayout(readingsTab, 0, 2, swerveDrive::getSpeeds);
+
+        limelight = new GamePieceLimelight("limelight-field");
+        Dashboard.createLimelightLayout(readingsTab, 2, 0, limelight);
+
+        inputDevice = new XboxController();
+        Dashboard.createControllerLayout(configTab, 2, 0, () -> inputDevice, this);
 
         // Configure the trigger bindings
         configureBindings();
@@ -128,7 +129,7 @@ public class RobotContainer {
     public Command getAutonomousCommand() {
         //return new RunCommand(() -> swerveDrive.drive(0.1, 0, 0, 0.5), swerveDrive);
         // An example command will be run in autonomous
-        return swerveDrive.auton1();
+        return Autos.driveOverChargeStation(swerveDrive);
     }
 
     public void setInputDevice(InputDevice inputDevice) {
