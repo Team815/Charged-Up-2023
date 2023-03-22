@@ -78,9 +78,7 @@ public class SwerveModule {
 
     private SwerveModuleState optimize(SwerveModuleState state) {
         return SwerveModuleState.optimize(
-            new SwerveModuleState(
-                state.speedMetersPerSecond,
-                Rotation2d.fromDegrees(state.angle.getDegrees())),
+            state,
             Rotation2d.fromDegrees(rotateSensor.getAbsolutePosition()));
     }
 }

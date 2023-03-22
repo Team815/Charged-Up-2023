@@ -34,6 +34,6 @@ public class CenterOnTarget extends CommandBase {
     @Override
     public void execute() {
         var rotation = -pid.calculate(targetOffsetSupplier.getAsDouble());
-        swerveDrive.drive(speedXSupplier.getAsDouble(), speedYSupplier.getAsDouble(), rotation, 0.5);
+        swerveDrive.drive(speedXSupplier.getAsDouble(), speedYSupplier.getAsDouble(), rotation);
     }
 }

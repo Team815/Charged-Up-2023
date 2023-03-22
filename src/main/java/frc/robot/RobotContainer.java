@@ -232,8 +232,7 @@ public class RobotContainer {
             new RunCommand(() -> swerveDrive.drive(
                 inputDevice.getForwardVelocity(),
                 inputDevice.getSidewaysVelocity(),
-                inputDevice.getAngularVelocity(),
-                0.5d),
+                inputDevice.getAngularVelocity()),
                 swerveDrive));
     }
 
@@ -243,12 +242,13 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
+        var commander = new RobotCommander(swerveDrive, shoulder, arm, claw);
         var autonIndex = autonChooser.getSelected();
-        var auton = autonIndex == 1 ? Autos.scoreCrossLevelRight(swerveDrive, shoulder, arm, claw)
-            : autonIndex == 2 ? Autos.scoreCrossLevelLeft(swerveDrive, shoulder, arm, claw)
-            : autonIndex == 3 ? Autos.scoreCrossLevelCenter(swerveDrive, shoulder, arm, claw)
-            : autonIndex == 4 ? Autos.test(swerveDrive)
-            : Autos.scoreCross(swerveDrive, shoulder, arm, claw);
+        var auton = autonIndex == 1 ? Autos.scoreCrossLevelRight(commander)
+            : autonIndex == 2 ? Autos.scoreCrossLevelLeft(commander)
+            : autonIndex == 3 ? Autos.scoreCrossLevelCenter(commander)
+            : autonIndex == 4 ? Autos.test(commander)
+            : Autos.scoreCross(commander);
         return new InstantCommand(arm::zeroEncoder)
             .andThen(auton);
     }

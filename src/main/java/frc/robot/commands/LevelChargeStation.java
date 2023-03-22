@@ -40,7 +40,7 @@ public class LevelChargeStation extends CommandBase {
                 initialAngle = 2;
                 speed = subsequentSpeed * Math.signum(largestLevel);
             }
-            swerveDrive.drive(-speed, 0d, 0d, 0.5d);
+            swerveDrive.drive(-speed, 0d, 0d);
         }
         levels.add(level);
     }

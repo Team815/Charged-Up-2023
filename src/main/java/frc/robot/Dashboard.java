@@ -30,7 +30,7 @@ public final class Dashboard {
             .getLayout("Swerve Drive", BuiltInLayouts.kGrid)
             .withSize(2, 2)
             .withPosition(column, row)
-            .withProperties(Map.of("Label position", "LEFT", "Number of columns", 1, "Number of rows", 4));
+            .withProperties(Map.of("Label position", "LEFT", "Number of columns", 1, "Number of rows", 5));
 
         var autoCorrectEnabledEntry = layout
             .add("Auto Correct", SwerveDrive.DEFAULT_AUTO_CORRECT_ENABLED)
@@ -68,6 +68,15 @@ public final class Dashboard {
             maxAngularAccelerationEntry,
             EnumSet.of(NetworkTableEvent.Kind.kValueAll),
             e -> swerveDrive.setMaxAngularAcceleration(e.valueData.value.getDouble()));
+
+        var maxAutoCorrectSpeedEntry = layout
+            .add("Max Auto-Correct Speed", SwerveDrive.DEFAULT_MAX_AUTO_CORRECT_SPEED)
+            .withPosition(0, 4)
+            .getEntry();
+        inst.addListener(
+            maxAutoCorrectSpeedEntry,
+            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
+            e -> swerveDrive.setMaxAutoCorrectSpeed(e.valueData.value.getDouble()));
     }
 
     public static void createSwerveModuleLayout(String tabName, int column, int row, SwerveModule... swerveModules) {
