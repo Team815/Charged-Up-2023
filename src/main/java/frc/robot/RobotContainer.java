@@ -4,17 +4,22 @@
 
 package frc.robot;
 
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj.Compressor;
+import edu.wpi.first.wpilibj.PneumaticsModuleType;
+import edu.wpi.first.wpilibj.Solenoid;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.commands.Autos;
-import frc.robot.commands.CenterOnTarget;
+import frc.robot.commands.*;
 import frc.robot.input.InputDevice;
 import frc.robot.input.XboxController;
-import frc.robot.subsystems.SwerveDrive;
-import frc.robot.subsystems.SwerveModule;
+import frc.robot.subsystems.*;
+
+import java.util.Map;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -24,8 +29,27 @@ import frc.robot.subsystems.SwerveModule;
  */
 public class RobotContainer {
     private InputDevice inputDevice;
+    private static final SendableChooser<Integer> autonChooser;
     private final SwerveDrive swerveDrive;
     private final GamePieceLimelight limelight;
+
+    static {
+        autonChooser = new SendableChooser<>();
+        autonChooser.setDefaultOption("ScoreCross", 0);
+        autonChooser.addOption("ScoreCrossLevelRight", 1);
+        autonChooser.addOption("ScoreCrossLevelLeft", 2);
+        autonChooser.addOption("ScoreCrossLevelCenter", 3);
+        autonChooser.addOption("Test", 4);
+        var tab = Shuffleboard.getTab("SmartDashboard");
+        var layout = tab
+            .getLayout("Robot", BuiltInLayouts.kGrid)
+            .withSize(3, 2)
+            .withProperties(Map.of("Label position", "LEFT", "Number of columns", 1, "Number of rows", 1));
+        layout
+            .add("Autonomous", autonChooser)
+            .withPosition(0, 0)
+            .withWidget(BuiltInWidgets.kComboBoxChooser);
+    }
 
     /**
      * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -76,20 +100,25 @@ public class RobotContainer {
             backRightRotateSensorId,
             backRightAngularOffset);
 
-        Dashboard.createSwerveModuleLayout(configTab, 0, 0, moduleFrontLeft, moduleFrontRight, moduleBackLeft, moduleBackRight);
-
         swerveDrive = new SwerveDrive(moduleFrontLeft, moduleFrontRight, moduleBackLeft, moduleBackRight);
-        Dashboard.createSwerveDriveLayout(configTab, 0, 2, swerveDrive);
-        Dashboard.createPoseLayout(readingsTab, 0, 0, swerveDrive::getPose);
-        Dashboard.createVelocityLayout(readingsTab, 0, 2, swerveDrive::getSpeeds);
 
         limelight = new GamePieceLimelight("limelight-field");
-        Dashboard.createLimelightLayout(readingsTab, 2, 0, limelight);
 
         inputDevice = new XboxController();
+
+        // Shuffleboard config tab
+
+        Dashboard.createSwerveModuleLayout(configTab, 0, 0, moduleFrontLeft, moduleFrontRight, moduleBackLeft, moduleBackRight);
+        Dashboard.createSwerveDriveLayout(configTab, 0, 2, swerveDrive);
         Dashboard.createControllerLayout(configTab, 2, 0, () -> inputDevice, this);
 
-        // Configure the trigger bindings
+        // Shuffleboard readings tab
+
+        Dashboard.createPoseLayout(readingsTab, 0, 0, swerveDrive::getPose);
+        Dashboard.createVelocityLayout(readingsTab, 0, 2, swerveDrive::getSpeeds);
+        Dashboard.createAnglesLayout(readingsTab, 2, 0, swerveDrive::getAngles);
+        Dashboard.createLimelightLayout(readingsTab, 2, 2, limelight);
+
         configureBindings();
     }
 
@@ -103,21 +132,28 @@ public class RobotContainer {
      * joysticks}.
      */
     private void configureBindings() {
-        inputDevice.resetHeading().onTrue(new InstantCommand(() -> swerveDrive.resetGyro(0)));
+        var commander = new RobotCommander(swerveDrive);
+
+        //Gyro
+        inputDevice.resetHeading().onTrue(commander.resetGyro(0));
+
+        //Limelight
         inputDevice.cycleLimelightTarget().onTrue(new InstantCommand(limelight::cycleTarget));
+
+        //Center Target
         inputDevice.centerOnTarget().whileTrue(new CenterOnTarget(
             swerveDrive,
             limelight::getHorizontalOffset,
             () -> inputDevice.getForwardVelocity(),
             () -> inputDevice.getSidewaysVelocity(),
-            0.02d));
+            0.02d,
+            1d));
 
         swerveDrive.setDefaultCommand(
             new RunCommand(() -> swerveDrive.drive(
                 inputDevice.getForwardVelocity(),
                 inputDevice.getSidewaysVelocity(),
-                inputDevice.getAngularVelocity(),
-                0.5d),
+                inputDevice.getAngularVelocity()),
                 swerveDrive));
     }
 
@@ -127,9 +163,14 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        //return new RunCommand(() -> swerveDrive.drive(0.1, 0, 0, 0.5), swerveDrive);
-        // An example command will be run in autonomous
-        return Autos.driveOverChargeStation(swerveDrive);
+        var commander = new RobotCommander(swerveDrive);
+        var autonIndex = autonChooser.getSelected();
+        var auton = autonIndex == 1 ? Autos.scoreCrossLevelRight(commander)
+            : autonIndex == 2 ? Autos.scoreCrossLevelLeft(commander)
+            : autonIndex == 3 ? Autos.scoreCrossLevelCenter(commander)
+            : autonIndex == 4 ? Autos.test(commander)
+            : Autos.scoreCross(commander);
+        return auton;
     }
 
     public void setInputDevice(InputDevice inputDevice) {

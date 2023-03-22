@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import frc.robot.input.InputDevice;
 import frc.robot.input.Joystick;
 import frc.robot.input.XboxController;
+import frc.robot.subsystems.GyroAngles;
 import frc.robot.subsystems.SwerveDrive;
 import frc.robot.subsystems.SwerveModule;
 
@@ -29,7 +30,7 @@ public final class Dashboard {
             .getLayout("Swerve Drive", BuiltInLayouts.kGrid)
             .withSize(2, 2)
             .withPosition(column, row)
-            .withProperties(Map.of("Label position", "LEFT", "Number of columns", 1, "Number of rows", 4));
+            .withProperties(Map.of("Label position", "LEFT", "Number of columns", 1, "Number of rows", 5));
 
         var autoCorrectEnabledEntry = layout
             .add("Auto Correct", SwerveDrive.DEFAULT_AUTO_CORRECT_ENABLED)
@@ -67,6 +68,15 @@ public final class Dashboard {
             maxAngularAccelerationEntry,
             EnumSet.of(NetworkTableEvent.Kind.kValueAll),
             e -> swerveDrive.setMaxAngularAcceleration(e.valueData.value.getDouble()));
+
+        var maxAutoCorrectSpeedEntry = layout
+            .add("Max Auto-Correct Speed", SwerveDrive.DEFAULT_MAX_AUTO_CORRECT_SPEED)
+            .withPosition(0, 4)
+            .getEntry();
+        inst.addListener(
+            maxAutoCorrectSpeedEntry,
+            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
+            e -> swerveDrive.setMaxAutoCorrectSpeed(e.valueData.value.getDouble()));
     }
 
     public static void createSwerveModuleLayout(String tabName, int column, int row, SwerveModule... swerveModules) {
@@ -199,6 +209,24 @@ public final class Dashboard {
             .withPosition(0, 1);
         layout
             .addString("Angular Position", () -> String.format("%.2f", pose.get().getRotation().getDegrees()))
+            .withPosition(0, 2);
+    }
+
+    public static void createAnglesLayout(String tabName, int column, int row, Supplier<GyroAngles> angles) {
+        var layout = Shuffleboard.getTab(tabName)
+            .getLayout("Angles", BuiltInLayouts.kGrid)
+            .withSize(2, 2)
+            .withPosition(column, row)
+            .withProperties(Map.of("Label position", "LEFT", "Number of columns", 1, "Number of rows", 3));
+
+        layout
+            .addString("Pitch", () -> String.format("%.2f", angles.get().getPitch()))
+            .withPosition(0, 0);
+        layout
+            .addString("Roll", () -> String.format("%.2f", angles.get().getRoll()))
+            .withPosition(0, 1);
+        layout
+            .addString("Yaw", () -> String.format("%.2f", angles.get().getYaw()))
             .withPosition(0, 2);
     }
 

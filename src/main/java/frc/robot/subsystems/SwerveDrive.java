@@ -8,20 +8,13 @@ import com.ctre.phoenix.sensors.Pigeon2;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.*;
-import edu.wpi.first.math.trajectory.TrajectoryConfig;
-import edu.wpi.first.math.trajectory.TrajectoryGenerator;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.wpilibj2.command.*;
-import frc.robot.commands.DriveToCommand;
-import frc.robot.commands.LevelChargeStation;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.stream.IntStream;
 
 public class SwerveDrive extends SubsystemBase {
@@ -29,10 +22,12 @@ public class SwerveDrive extends SubsystemBase {
     public static final double DEFAULT_AUTO_CORRECT_DELAY = 0.4d;
     public static final double DEFAULT_MAX_LINEAR_ACCELERATION = 0.03d;
     public static final double DEFAULT_MAX_ANGULAR_ACCELERATION = 0.03d;
+    public static final double DEFAULT_MAX_AUTO_CORRECT_SPEED = 0.5d;
     private boolean autoCorrectEnabled = DEFAULT_AUTO_CORRECT_ENABLED;
     private double autoCorrectDelay = DEFAULT_AUTO_CORRECT_DELAY;
     private double maxLinearAcceleration = DEFAULT_MAX_LINEAR_ACCELERATION;
     private double maxAngularAcceleration = DEFAULT_MAX_ANGULAR_ACCELERATION;
+    private double maxAutoCorrectSpeed = DEFAULT_MAX_AUTO_CORRECT_SPEED;
     private ChassisSpeeds currentSpeeds = new ChassisSpeeds();
     private final Pigeon2 gyro;
     private final SwerveModule[] modules;
@@ -80,7 +75,7 @@ public class SwerveDrive extends SubsystemBase {
             getSwerveModulePositions(modules));
     }
 
-    public void drive(double forwardVelocity, double sidewaysVelocity, double angularVelocity, double maxCorrectionSpeed) {
+    public void drive(double forwardVelocity, double sidewaysVelocity, double angularVelocity) {
         var yaw = gyro.getYaw();
 
         var targetSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
@@ -95,8 +90,7 @@ public class SwerveDrive extends SubsystemBase {
         var autoCorrect = autoCorrectEnabled ? autoCorrectRotation(
             currentSpeeds.omegaRadiansPerSecond,
             nextAngularSpeed,
-            yaw,
-            maxCorrectionSpeed) : 0d;
+            yaw) : 0d;
 
         currentSpeeds = new ChassisSpeeds(
             getNextSpeed(currentSpeeds.vxMetersPerSecond, targetSpeeds.vxMetersPerSecond, maxLinearAcceleration),
@@ -110,10 +104,6 @@ public class SwerveDrive extends SubsystemBase {
 
         var states = kinematics.toSwerveModuleStates(autoCorrectSpeeds);
         setSwerveModuleStates(states);
-    }
-
-    public double getAngle() {
-        return gyro.getYaw();
     }
 
     public void resetGyro(double offset) {
@@ -136,59 +126,12 @@ public class SwerveDrive extends SubsystemBase {
         return currentSpeeds;
     }
 
-    public CommandBase driveOntoChargeStation() {
-        return new InstantCommand(this::resetPose)
-            .andThen(new DriveToCommand(
-                new Pose2d(40d, 0d, Rotation2d.fromDegrees(0d)),
-                0.15d,
-                0.5d,
-                this))
-            .andThen(new LevelChargeStation(this));
-    }
-
-    public CommandBase auton1() {
-        return new InstantCommand(this::resetPose)
-            .andThen(new InstantCommand(() -> resetGyro(0)))
-            .andThen(MySwerveControllerCommand()
-                .alongWith(new RunCommand(() -> System.out.println(odometry.getPoseMeters().toString()))));
-    }
-
     public void setAngle(double angle) {
         pidRotation.setSetpoint(angle);
     }
 
-    public double getLevel() {
-        return gyro.getPitch();
-    }
-
-    public CommandBase MySwerveControllerCommand() {
-        var config = new TrajectoryConfig(2d, 0.2d).setKinematics(kinematics);
-
-        var exampleTrajectory =
-            TrajectoryGenerator.generateTrajectory(
-                new Pose2d(0, 0, new Rotation2d(0)),
-                List.of(new Translation2d(5, 5), new Translation2d(10, -5)),
-                new Pose2d(10, 0, new Rotation2d(0)),
-                config);
-        var thetaController =
-            new ProfiledPIDController(
-                0.1d, 0, 0, new TrapezoidProfile.Constraints(1d, 1d));
-        thetaController.enableContinuousInput(0, 360);
-
-        System.out.println(exampleTrajectory.getStates().size());
-        for (var state : exampleTrajectory.getStates()) {
-            System.out.println(state.toString());
-        }
-
-        return new SwerveControllerCommand(
-            exampleTrajectory,
-            this::getPose,
-            kinematics,
-            new PIDController(0.1d, 0d, 0d),
-            new PIDController(0.1d, 0d, 0d),
-            thetaController,
-            this::setSwerveModuleStates,
-            this);
+    public GyroAngles getAngles() {
+        return new GyroAngles(gyro.getPitch(), gyro.getRoll(), gyro.getYaw());
     }
 
     public void setAutoCorrectEnabled(boolean autoCorrectEnabled) {
@@ -199,29 +142,29 @@ public class SwerveDrive extends SubsystemBase {
     }
 
     public void setAutoCorrectDelay(double autoCorrectDelay) {
-        this.autoCorrectDelay = autoCorrectDelay;
+        this.autoCorrectDelay = Math.abs(autoCorrectDelay);
     }
 
     public void setMaxLinearAcceleration(double maxLinearAcceleration) {
-        this.maxLinearAcceleration = maxLinearAcceleration;
+        this.maxLinearAcceleration = Math.abs(maxLinearAcceleration);
     }
 
     public void setMaxAngularAcceleration(double maxAngularAcceleration) {
-        this.maxAngularAcceleration = maxAngularAcceleration;
+        this.maxAngularAcceleration = Math.abs(maxAngularAcceleration);
     }
 
-    private double autoCorrectRotation(
-        double currentAngularSpeed,
-        double nextAngularSpeed,
-        double yaw,
-        double limit) {
+    public void setMaxAutoCorrectSpeed(double maxAutoCorrectSpeed) {
+        this.maxAutoCorrectSpeed = MathUtil.clamp(Math.abs(maxAutoCorrectSpeed), 0, 1);
+    }
+
+    private double autoCorrectRotation(double currentAngularSpeed, double nextAngularSpeed, double yaw) {
         var stoppedRotating = nextAngularSpeed == 0d && currentAngularSpeed != 0d;
         if (stoppedRotating) {
             timer.start(autoCorrectDelay);
         } else if (currentAngularSpeed != 0d || timer.isRunning()) {
             setAngle(yaw);
         } else {
-            return MathUtil.clamp(pidRotation.calculate(yaw), -limit, limit);
+            return MathUtil.clamp(pidRotation.calculate(yaw), -maxAutoCorrectSpeed, maxAutoCorrectSpeed);
         }
         return 0d;
     }
