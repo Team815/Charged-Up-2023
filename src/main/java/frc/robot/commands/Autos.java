@@ -19,21 +19,21 @@ public final class Autos {
         throw new UnsupportedOperationException("This is a utility class!");
     }
 
-    private static final double chargeStationPositionX = 30d;
-    private static final double chargeStationPositionY = 41d;
-
     private static CommandBase score(RobotCommander commander) {
         return commander.resetPose()
-            .andThen(commander.resetGyro(180d))
-            .andThen(commander.driveTo(4d, 0d, 180d, 0.2d, 0.2d)
-                .alongWith(commander.liftArmTo(KeepArmAt.FarConeNode, 0.1d)
-                    .withTimeout(3d)))
-            .andThen(commander.moveShoulder(18000d)
-                .alongWith(commander.driveTo(0d, 0d, 180d, 0.2d, 0.2d))
-                .deadlineWith(commander.keepArmAt(KeepArmAt.FarConeNode)))
+            .andThen(
+                commander.resetGyro(180d),
+                commander.driveTo(4d, 0d, 180d, 0.2d, 0.2d)
+                    .alongWith(commander.liftArmTo(KeepArmAt.FarConeNode, 0.1d)
+                        .withTimeout(3d)),
+                commander.moveShoulder(18000d)
+                    .alongWith(commander.driveTo(0d, 0d, 180d, 0.2d, 0.2d))
+                    .deadlineWith(commander.keepArmAt(KeepArmAt.FarConeNode)))
             .withTimeout(4d)
             .andThen(new WaitCommand(0.3d)
-                .deadlineWith(commander.openClaw(), commander.keepArmAt(KeepArmAt.FarConeNode)));
+                .deadlineWith(
+                    commander.openClaw(),
+                    commander.keepArmAt(KeepArmAt.FarConeNode)));
     }
 
     public static CommandBase scoreCross(RobotCommander commander) {
@@ -48,10 +48,13 @@ public final class Autos {
     }
 
     private static CommandBase scoreCrossLevel(RobotCommander commander, int direction) {
+        final double chargeStationPositionX = 30d;
+        final double chargeStationPositionY = 41d;
         return scoreCross(commander)
-            .andThen(commander.driveTo(85d, chargeStationPositionY * Math.signum(direction), 90d, 0.6d, 0.5d))
-            .andThen(commander.driveTo(chargeStationPositionX, chargeStationPositionY * Math.signum(direction), 90d, 0.3d, 0.5d))
-            .andThen(commander.level());
+            .andThen(
+                commander.driveTo(85d, chargeStationPositionY * Math.signum(direction), 90d, 0.6d, 0.5d),
+                commander.driveTo(chargeStationPositionX, chargeStationPositionY * Math.signum(direction), 90d, 0.3d, 0.5d),
+                commander.level());
     }
 
     public static CommandBase scoreCrossLevelRight(RobotCommander commander) {
@@ -65,7 +68,7 @@ public final class Autos {
     public static CommandBase scoreCrossLevelCenter(RobotCommander commander) {
         return score(commander)
             .andThen(
-                commander.driveTo(0 ,0, 90, 0.2, 0.2),
+                commander.driveTo(0, 0, 90, 0.2, 0.2),
                 commander.driveTo(90, 0, 90, .4, .4),
                 commander.driveTo(50, 0, 90, .3, .3),
                 commander.level());
@@ -73,9 +76,10 @@ public final class Autos {
 
     public static CommandBase test(RobotCommander commander) {
         return commander.resetPose()
-            .andThen(commander.resetGyro(90d))
-            .andThen(commander.driveTo(-55d, 0, 90d, 0.3d, 0.5d))
-            .andThen(commander.level());
+            .andThen(
+                commander.resetGyro(90d),
+                commander.driveTo(-55d, 0, 90d, 0.3d, 0.5d),
+                commander.level());
     }
 
 //    public CommandBase MySwerveControllerCommand() {

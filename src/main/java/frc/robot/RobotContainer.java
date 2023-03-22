@@ -150,8 +150,10 @@ public class RobotContainer {
      * joysticks}.
      */
     private void configureBindings() {
+        var commander = new RobotCommander(swerveDrive, shoulder, arm, claw);
+
         //Gyro
-        inputDevice.resetHeading().onTrue(new InstantCommand(() -> swerveDrive.resetGyro(0)));
+        inputDevice.resetHeading().onTrue(commander.resetGyro(0));
 
         //Limelight
         inputDevice.cycleLimelightTarget().onTrue(new InstantCommand(limelight::cycleTarget));
@@ -167,54 +169,70 @@ public class RobotContainer {
 
         //Claw
         inputDevice.openClaw().whileTrue(
-            new MoveShoulder(shoulder, 17000)
-                .andThen(new InstantCommand(claw::open)));
+            commander.moveShoulder(17000)
+                .andThen(commander.openClaw()));
 
         inputDevice.openClaw().onFalse(
-            (new InstantCommand(claw::close)
-                .alongWith(new WaitCommand(0.5d)))
-                .andThen(new MoveShoulder(shoulder, 0d)
-                    .alongWith(new KeepArmAt(arm, KeepArmAt.AboveFloor, 0.2d))));
+            commander.closeClaw()
+                .alongWith(new WaitCommand(0.5d))
+                .andThen(commander.moveShoulder(0d)
+                    .alongWith(commander.keepArmAt(KeepArmAt.AboveFloor))));
 
         //Arm
         inputDevice.setArmToTopCone().whileTrue(
-            new LiftArmTo(arm, KeepArmAt.FarConeNode, 0.2d)
-                .andThen(new MoveShoulder(shoulder, 17000d)
-                    .alongWith(new KeepArmAt(arm, KeepArmAt.FarConeNode, 0.2d))));
+            commander.liftArmTo(KeepArmAt.FarConeNode)
+                .andThen(commander.moveShoulder(17000d)
+                    .alongWith(commander.keepArmAt(KeepArmAt.FarConeNode))));
 
         inputDevice.setArmToTopCone().onFalse(
-            (new WaitCommand(0.5d)
-                .deadlineWith(new InstantCommand(claw::open), new KeepArmAt(arm, KeepArmAt.FarConeNode, 0.2d)))
-                .andThen(new MoveShoulder(shoulder, 0d)
-                    .deadlineWith(new InstantCommand(claw::close), new KeepArmAt(arm, KeepArmAt.FarConeNode, 0.2d)))
-                .andThen(new DropArm(arm)));
+            new WaitCommand(0.5d)
+                .deadlineWith(
+                    commander.openClaw(),
+                    commander.keepArmAt(KeepArmAt.FarConeNode))
+                .andThen(
+                    commander.moveShoulder(0d)
+                        .deadlineWith(
+                            commander.closeClaw(),
+                            commander.keepArmAt(KeepArmAt.FarConeNode)),
+                    commander.dropArm()));
 
         inputDevice.setArmToBottomCone().whileTrue(
-            new LiftArmTo(arm, KeepArmAt.NearConeNode, 0.2d)
-                .andThen(new MoveShoulder(shoulder, 1000d)
-                    .alongWith(new KeepArmAt(arm, KeepArmAt.NearConeNode, 0.2d))));
+            commander.liftArmTo(KeepArmAt.NearConeNode)
+                .andThen(commander.moveShoulder(1000d)
+                    .alongWith(commander.keepArmAt(KeepArmAt.NearConeNode))));
 
         inputDevice.setArmToBottomCone().onFalse(
-            (new WaitCommand(0.5d)
-                .deadlineWith(new InstantCommand(claw::open), new KeepArmAt(arm, KeepArmAt.NearConeNode, 0.2d)))
-                .andThen(new MoveShoulder(shoulder, 0d)
-                    .deadlineWith(new InstantCommand(claw::close), new KeepArmAt(arm, KeepArmAt.NearConeNode, 0.2d)))
-                .andThen(new DropArm(arm)));
+            new WaitCommand(0.5d)
+                .deadlineWith(
+                    commander.openClaw(),
+                    commander.keepArmAt(KeepArmAt.NearConeNode))
+                .andThen(
+                    commander.moveShoulder(0d)
+                        .deadlineWith(
+                            commander.closeClaw(),
+                            commander.keepArmAt(KeepArmAt.NearConeNode)),
+                    commander.dropArm()));
 
         inputDevice.setArmToStationPickup().whileTrue(
-            new LiftArmTo(arm, KeepArmAt.Substation, 0.2d)
-                .andThen(new MoveShoulder(shoulder, 15000)
-                    .alongWith(new KeepArmAt(arm, KeepArmAt.Substation, 0.2d), new InstantCommand(claw::open))));
+            commander.liftArmTo(KeepArmAt.Substation)
+                .andThen(commander.moveShoulder(15000d)
+                    .alongWith(
+                        commander.keepArmAt(KeepArmAt.Substation),
+                        commander.openClaw())));
 
         inputDevice.setArmToStationPickup().onFalse(
             new WaitCommand(0.3d)
-                .deadlineWith(new InstantCommand(claw::close), new KeepArmAt(arm, KeepArmAt.Substation, 0.2d))
-                .andThen(new MoveShoulder(shoulder, 0d)
-                    .deadlineWith(new KeepArmAt(arm, KeepArmAt.Substation, 0.2d)))
-                .andThen(new KeepArmAt(arm, KeepArmAt.AboveFloor, 0.1d)));
+                .deadlineWith(
+                    commander.closeClaw(),
+                    commander.keepArmAt(KeepArmAt.Substation))
+                .andThen(
+                    commander.moveShoulder(0d)
+                        .deadlineWith(commander.keepArmAt(KeepArmAt.Substation)),
+                    commander.keepArmAt(KeepArmAt.AboveFloor)));
 
-        inputDevice.turtle().onTrue(new DropArm(arm)
-            .alongWith(new MoveShoulder(shoulder, 0d)));
+        inputDevice.turtle().onTrue(
+            commander.dropArm()
+                .alongWith(commander.moveShoulder(0d)));
 
         inputDevice.slow().whileTrue(new StartEndCommand(
             () -> {
