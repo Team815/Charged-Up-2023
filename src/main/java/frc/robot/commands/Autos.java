@@ -17,11 +17,18 @@ public final class Autos {
     }
 
     private static CommandBase score(RobotCommander commander) {
-        return commander.resetPose();
+        return commander.resetPose().andThen(
+                commander.resetGyro(180d),
+                commander.driveTo(4d, 0d, 180d, 0.2d, 0.2d)
+                  .withTimeout(3d),
+                commander.driveTo(0d, 0d, 180d, 0.2d, 0.2d)
+                    .withTimeout(3d));
     }
 
     public static CommandBase scoreCross(RobotCommander commander) {
-        return score(commander);
+        return score(commander)
+            .andThen(commander.driveTo(85d, 0d, 180d, 0.6d, 0.5d)
+                .withTimeout(3d));
     }
 
     private static CommandBase scoreCrossLevel(RobotCommander commander, int direction) {
