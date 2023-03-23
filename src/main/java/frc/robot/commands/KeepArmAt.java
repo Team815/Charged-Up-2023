@@ -16,8 +16,9 @@ public class KeepArmAt extends CommandBase {
     public static final double NearConeNode = -0.08d;
     public static final double Substation = -0.07d;
     public static final double AboveFloor = 0.11d;
-    public static final double NoConeFf = 0.09d;
-    public static final double ConeFf = 0.12d;
+    public static final double NoConeFf = 0.06d;
+    public static final double FarConeNodeFf = 0.07d;
+    public static final double NearConeNodeFf = 0.08d;
     public static final double ConeGroundFf = 0.05d;
 
     public KeepArmAt(Arm arm, double target, double maxSpeed, double feedForward) {

@@ -7,10 +7,6 @@ package frc.robot;
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
-import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
-import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -18,8 +14,6 @@ import frc.robot.commands.*;
 import frc.robot.input.InputDevice;
 import frc.robot.input.XboxController;
 import frc.robot.subsystems.*;
-
-import java.util.Map;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -167,9 +161,9 @@ public class RobotContainer {
 
         //Arm
         inputDevice.setArmToTopCone().whileTrue(
-            commander.liftArmTo(KeepArmAt.FarConeNode, KeepArmAt.ConeFf)
-                .andThen(commander.moveShoulder(17000d)
-                    .alongWith(commander.keepArmAt(KeepArmAt.FarConeNode, KeepArmAt.ConeFf))));
+            commander.liftArmTo(KeepArmAt.FarConeNode, KeepArmAt.FarConeNodeFf)
+                .andThen(commander.moveShoulder(18000d)
+                    .alongWith(commander.keepArmAt(KeepArmAt.FarConeNode, KeepArmAt.FarConeNodeFf))));
 
         inputDevice.setArmToTopCone().onFalse(
             new WaitCommand(0.5d)
@@ -186,9 +180,9 @@ public class RobotContainer {
                         .alongWith(commander.dropArm())));
 
         inputDevice.setArmToBottomCone().whileTrue(
-            commander.liftArmTo(KeepArmAt.NearConeNode, KeepArmAt.ConeFf)
+            commander.liftArmTo(KeepArmAt.NearConeNode, KeepArmAt.NearConeNodeFf)
                 .andThen(commander.moveShoulder(1000d)
-                    .alongWith(commander.keepArmAt(KeepArmAt.NearConeNode, KeepArmAt.ConeFf))));
+                    .alongWith(commander.keepArmAt(KeepArmAt.NearConeNode, KeepArmAt.NearConeNodeFf))));
 
         inputDevice.setArmToBottomCone().onFalse(
             new WaitCommand(0.5d)
@@ -218,7 +212,7 @@ public class RobotContainer {
                     new WaitUntilCommand(() -> shoulder.getPosition() <= 8000d)
                         .deadlineWith(
                             commander.moveShoulder(0d),
-                            commander.keepArmAt(KeepArmAt.Substation, KeepArmAt.ConeFf)),
+                            commander.keepArmAt(KeepArmAt.Substation, KeepArmAt.FarConeNodeFf)),
                     commander.moveShoulder(0d)
                         .alongWith(commander.keepArmAt(KeepArmAt.AboveFloor, 0.15d, KeepArmAt.ConeGroundFf))));
 

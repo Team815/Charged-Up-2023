@@ -5,10 +5,6 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.*;
-import frc.robot.subsystems.Arm;
-import frc.robot.subsystems.Claw;
-import frc.robot.subsystems.Shoulder;
-import frc.robot.subsystems.SwerveDrive;
 
 public final class Autos {
     /**
@@ -28,7 +24,7 @@ public final class Autos {
                         .withTimeout(3d)),
                 commander.moveShoulder(18000d)
                     .alongWith(commander.driveTo(0d, 0d, 180d, 0.2d, 0.2d))
-                    .deadlineWith(commander.keepArmAt(KeepArmAt.FarConeNode, KeepArmAt.ConeFf)))
+                    .deadlineWith(commander.keepArmAt(KeepArmAt.FarConeNode, KeepArmAt.FarConeNodeFf)))
             .withTimeout(4d)
             .andThen(new WaitCommand(0.3d)
                 .deadlineWith(
