@@ -72,6 +72,16 @@ public class Joystick extends CommandJoystick implements InputDevice {
     }
 
     @Override
+    public Trigger test1() {
+        return null;
+    }
+
+    @Override
+    public Trigger test2() {
+        return null;
+    }
+
+    @Override
     public void setMaxSidewaysSpeed(double maxSidewaysSpeed) {
     }
 

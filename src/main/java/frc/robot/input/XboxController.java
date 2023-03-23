@@ -75,6 +75,16 @@ public class XboxController extends CommandXboxController implements InputDevice
     }
 
     @Override
+    public Trigger test1() {
+        return povLeft();
+    }
+
+    @Override
+    public Trigger test2() {
+        return povRight();
+    }
+
+    @Override
     public void setMaxSidewaysSpeed(double maxSidewaysSpeed) {
         this.maxSidewaysSpeed = MathUtil.clamp(Math.abs(maxSidewaysSpeed), 0, 1);
     }

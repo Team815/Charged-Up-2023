@@ -28,12 +28,12 @@ public final class Autos {
                         .withTimeout(3d)),
                 commander.moveShoulder(18000d)
                     .alongWith(commander.driveTo(0d, 0d, 180d, 0.2d, 0.2d))
-                    .deadlineWith(commander.keepArmAt(KeepArmAt.FarConeNode)))
+                    .deadlineWith(commander.keepArmAt(KeepArmAt.FarConeNode, KeepArmAt.ConeFf)))
             .withTimeout(4d)
             .andThen(new WaitCommand(0.3d)
                 .deadlineWith(
                     commander.openClaw(),
-                    commander.keepArmAt(KeepArmAt.FarConeNode)));
+                    commander.keepArmAt(KeepArmAt.FarConeNode, KeepArmAt.NoConeFf)));
     }
 
     public static CommandBase scoreCross(RobotCommander commander) {
@@ -43,7 +43,7 @@ public final class Autos {
                     commander.driveTo(85d, 0d, 180d, 0.6d, 0.5d),
                     commander.closeClaw(),
                     new WaitCommand(0.3d)
-                        .deadlineWith(commander.keepArmAt(KeepArmAt.FarConeNode))
+                        .deadlineWith(commander.keepArmAt(KeepArmAt.FarConeNode, KeepArmAt.NoConeFf))
                         .andThen(commander.dropArm())));
     }
 

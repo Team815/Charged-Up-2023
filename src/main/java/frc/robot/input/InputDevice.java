@@ -31,6 +31,10 @@ public interface InputDevice {
 
     Trigger slow();
 
+    Trigger test1();
+
+    Trigger test2();
+
     void setMaxSidewaysSpeed(double maxSidewaysSpeed);
 
     void setMaxForwardSpeed(double maxForwardSpeed);

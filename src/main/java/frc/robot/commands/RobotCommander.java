@@ -56,20 +56,20 @@ public class RobotCommander {
 
     // Arm Commands
 
-    public KeepArmAt keepArmAt(double target) {
-        return keepArmAt(target, 0.2d);
+    public KeepArmAt keepArmAt(double target, double feedForward) {
+        return keepArmAt(target, 0.2d, feedForward);
     }
 
-    public KeepArmAt keepArmAt(double target, double maxSpeed) {
-        return new KeepArmAt(arm, target, maxSpeed);
+    public KeepArmAt keepArmAt(double target, double maxSpeed, double feedForward) {
+        return new KeepArmAt(arm, target, maxSpeed, feedForward);
     }
 
-    public LiftArmTo liftArmTo(double target) {
-        return liftArmTo(target, 0.2d);
+    public LiftArmTo liftArmTo(double target, double feedForward) {
+        return liftArmTo(target, 0.2d, feedForward);
     }
 
-    public LiftArmTo liftArmTo(double target, double maxSpeed) {
-        return new LiftArmTo(arm, target, maxSpeed);
+    public LiftArmTo liftArmTo(double target, double maxSpeed, double feedForward) {
+        return new LiftArmTo(arm, target, maxSpeed, feedForward);
     }
 
     public DropArm dropArm() {

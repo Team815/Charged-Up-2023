@@ -2,14 +2,17 @@ package frc.robot;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEvent;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import frc.robot.input.InputDevice;
 import frc.robot.input.Joystick;
 import frc.robot.input.XboxController;
+import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.GyroAngles;
 import frc.robot.subsystems.SwerveDrive;
 import frc.robot.subsystems.SwerveModule;
@@ -246,5 +249,66 @@ public final class Dashboard {
         layout
             .addString("Angular Velocity", () -> String.format("%.2f", speeds.get().omegaRadiansPerSecond))
             .withPosition(0, 2);
+    }
+
+    public static void createShoulderLayout(String tabName, int column, int row, Supplier<Double> position) {
+        var layout = Shuffleboard.getTab(tabName)
+            .getLayout("Shoulder", BuiltInLayouts.kGrid)
+            .withSize(2, 1)
+            .withPosition(column, row)
+            .withProperties(Map.of("Label position", "LEFT", "Number of columns", 1, "Number of rows", 1));
+
+        layout
+            .addString("Position", () -> String.format("%.0f", position.get()))
+            .withPosition(0, 0);
+    }
+
+    public static void createArmLayout(String tabName, int column, int row, Arm arm) {
+        var layout = Shuffleboard.getTab(tabName)
+            .getLayout("Arm", BuiltInLayouts.kGrid)
+            .withSize(2, 1)
+            .withPosition(column, row)
+            .withProperties(Map.of("Label position", "LEFT", "Number of columns", 1, "Number of rows", 2));
+
+        layout
+            .addString("Power", () -> String.format("%.2f", arm.getPower()))
+            .withPosition(0, 0);
+        layout
+            .addString("Position", () -> String.format("%.3f", arm.getPosition()))
+            .withPosition(0, 0);
+    }
+
+    public static void createAutonomousLayout(String tabName, int column, int row, RobotContainer container) {
+        var autonChooser = new SendableChooser<Integer>();
+        autonChooser.setDefaultOption("ScoreCross", 0);
+        autonChooser.addOption("ScoreCrossLevelRight", 1);
+        autonChooser.addOption("ScoreCrossLevelLeft", 2);
+        autonChooser.addOption("ScoreCrossLevelCenter", 3);
+        autonChooser.addOption("Test", 4);
+        var tab = Shuffleboard.getTab(tabName);
+        var layout = tab
+            .getLayout("Robot", BuiltInLayouts.kGrid)
+            .withSize(3, 1)
+            .withPosition(column, row)
+            .withProperties(Map.of("Label position", "LEFT", "Number of columns", 1, "Number of rows", 1));
+        layout
+            .add("Autonomous", autonChooser)
+            .withPosition(0, 0)
+            .withWidget(BuiltInWidgets.kComboBoxChooser);
+
+        NetworkTableInstance
+            .getDefault()
+            .getTable("Shuffleboard")
+            .getSubTable("Readings")
+            .getSubTable("Robot")
+            .getSubTable("Autonomous")
+            .addListener(
+                "selected",
+                EnumSet.of(NetworkTableEvent.Kind.kValueAll),
+                (table, key, event) -> {
+                    var options = table.getEntry("options").getValue().getStringArray();
+                    var index = Arrays.asList(options).indexOf(event.valueData.value.getString());
+                    container.setAutonomous(index);
+                });
     }
 }

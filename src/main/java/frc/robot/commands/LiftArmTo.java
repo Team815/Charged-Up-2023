@@ -4,8 +4,8 @@ import frc.robot.subsystems.Arm;
 
 public class LiftArmTo extends KeepArmAt {
 
-    public LiftArmTo(Arm arm, double target, double maxSpeed) {
-        super(arm, target, maxSpeed);
+    public LiftArmTo(Arm arm, double target, double maxSpeed, double feedForward) {
+        super(arm, target, maxSpeed, feedForward);
     }
 
     @Override
