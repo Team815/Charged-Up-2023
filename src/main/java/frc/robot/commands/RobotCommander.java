@@ -23,13 +23,13 @@ public class RobotCommander {
 
     // Swerve Drive Commands
 
-    public DriveToCommand driveTo(
+    public DriveTo driveTo(
         double forwardPosition,
         double sidewaysPosition,
         double angularPosition,
         double maxLinearSpeed,
         double maxAngularSpeed) {
-        return new DriveToCommand(
+        return new DriveTo(
             new Pose2d(forwardPosition, sidewaysPosition, Rotation2d.fromDegrees(angularPosition)),
             maxLinearSpeed,
             maxAngularSpeed,

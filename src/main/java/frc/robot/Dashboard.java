@@ -12,10 +12,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import frc.robot.input.InputDevice;
 import frc.robot.input.Joystick;
 import frc.robot.input.XboxController;
-import frc.robot.subsystems.Arm;
-import frc.robot.subsystems.GyroAngles;
-import frc.robot.subsystems.SwerveDrive;
-import frc.robot.subsystems.SwerveModule;
+import frc.robot.subsystems.*;
 
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -259,7 +256,7 @@ public final class Dashboard {
             .withProperties(Map.of("Label position", "LEFT", "Number of columns", 1, "Number of rows", 1));
 
         layout
-            .addString("Position", () -> String.format("%.0f", position.get()))
+            .addString("Position", () -> String.format("%.3f", position.get()))
             .withPosition(0, 0);
     }
 
@@ -310,5 +307,22 @@ public final class Dashboard {
                     var index = Arrays.asList(options).indexOf(event.valueData.value.getString());
                     container.setAutonomous(index);
                 });
+    }
+
+    public static void createClawLayout(String tabName, int column, int row, Claw claw) {
+        var layout = Shuffleboard.getTab(tabName)
+            .getLayout("Claw", BuiltInLayouts.kGrid)
+            .withSize(2, 1)
+            .withPosition(column, row)
+            .withProperties(Map.of("Label position", "LEFT", "Number of columns", 1, "Number of rows", 1));
+
+        layout
+            .addString("State", () -> claw.isOpen() ? "Open" : "Closed")
+            .withPosition(0, 0);
+
+        layout
+            .addString("Detects", () -> claw.isOpen() ? "Open" : "Closed")
+            .withPosition(0, 0);
+
     }
 }

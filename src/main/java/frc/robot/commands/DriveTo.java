@@ -7,7 +7,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.SwerveDrive;
 
-public class DriveToCommand extends CommandBase {
+public class DriveTo extends CommandBase {
 
     private final SwerveDrive swerveDrive;
     private final Pose2d target;
@@ -16,11 +16,12 @@ public class DriveToCommand extends CommandBase {
     private final double maxLinearSpeed;
     private final double maxAngularSpeed;
 
-    public DriveToCommand(Pose2d target, double maxLinearSpeed, double maxAngularSpeed, SwerveDrive swerveDrive) {
+    public DriveTo(Pose2d target, double maxLinearSpeed, double maxAngularSpeed, SwerveDrive swerveDrive) {
         super();
         this.target = target;
         this.swerveDrive = swerveDrive;
         linearPid = new PIDController(0.03d, 0.001d, 0d);
+        linearPid.setTolerance(0.5d);
         angularPid = new PIDController(0.01d, 0d, 0d);
         angularPid.enableContinuousInput(0d, 360d);
         angularPid.setTolerance(4d);
@@ -47,6 +48,13 @@ public class DriveToCommand extends CommandBase {
 
     @Override
     public boolean isFinished() {
-        return linearPid.atSetpoint() && angularPid.atSetpoint();
+        return linearPid.atSetpoint();// && angularPid.atSetpoint();
+    }
+
+    @Override
+    public void end(boolean interrupted) {
+        if (!interrupted) {
+            System.out.println("DriveTo finished");
+        }
     }
 }

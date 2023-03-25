@@ -93,12 +93,13 @@ public class RobotContainer {
 
         inputDevice = new XboxController();
 
-        var verticalMotorMainId = 9;
-        var verticalMotorSecondaryId = 10;
-        var horizontalMotorId = 3;
+        var armMotor1Id = 9;
+        var armMotor2Id = 10;
+        var shoulderMotorId = 22;
+        var shoulderEncoderChannel = 1;
 
-        arm = new Arm(verticalMotorMainId, verticalMotorSecondaryId);
-        shoulder = new Shoulder(horizontalMotorId);
+        arm = new Arm(armMotor1Id, armMotor2Id);
+        shoulder = new Shoulder(shoulderMotorId, shoulderEncoderChannel);
 
         autonId = 0;
 
@@ -150,19 +151,19 @@ public class RobotContainer {
 
         //Claw
         inputDevice.openClaw().whileTrue(
-            commander.moveShoulder(17000)
+            commander.moveShoulder(MoveShoulder.PICKUP)
                 .andThen(commander.openClaw()));
 
         inputDevice.openClaw().onFalse(
             commander.closeClaw()
                 .alongWith(new WaitCommand(0.5d))
-                .andThen(commander.moveShoulder(0d)
+                .andThen(commander.moveShoulder(MoveShoulder.RETRACTED)
                     .alongWith(commander.keepArmAt(KeepArmAt.AboveFloor, KeepArmAt.ConeGroundFf))));
 
         //Arm
         inputDevice.setArmToTopCone().whileTrue(
             commander.liftArmTo(KeepArmAt.FarConeNode, KeepArmAt.FarConeNodeFf)
-                .andThen(commander.moveShoulder(18000d)
+                .andThen(commander.moveShoulder(MoveShoulder.FAR_CONE)
                     .alongWith(commander.keepArmAt(KeepArmAt.FarConeNode, KeepArmAt.FarConeNodeFf))));
 
         inputDevice.setArmToTopCone().onFalse(
@@ -171,17 +172,17 @@ public class RobotContainer {
                     commander.openClaw(),
                     commander.keepArmAt(KeepArmAt.FarConeNode, KeepArmAt.NoConeFf))
                 .andThen(
-                    new WaitUntilCommand(() -> shoulder.getPosition() <= 8000d)
+                    new WaitUntilCommand(() -> shoulder.getPosition() >= -1d)
                         .deadlineWith(
-                            commander.moveShoulder(0d),
+                            commander.moveShoulder(MoveShoulder.RETRACTED),
                             commander.closeClaw(),
                             commander.keepArmAt(KeepArmAt.FarConeNode, KeepArmAt.NoConeFf)),
-                    commander.moveShoulder(0d)
+                    commander.moveShoulder(MoveShoulder.RETRACTED)
                         .alongWith(commander.dropArm())));
 
         inputDevice.setArmToBottomCone().whileTrue(
             commander.liftArmTo(KeepArmAt.NearConeNode, KeepArmAt.NearConeNodeFf)
-                .andThen(commander.moveShoulder(1000d)
+                .andThen(commander.moveShoulder(MoveShoulder.NEAR_CONE)
                     .alongWith(commander.keepArmAt(KeepArmAt.NearConeNode, KeepArmAt.NearConeNodeFf))));
 
         inputDevice.setArmToBottomCone().onFalse(
@@ -190,41 +191,37 @@ public class RobotContainer {
                     commander.openClaw(),
                     commander.keepArmAt(KeepArmAt.NearConeNode, KeepArmAt.NoConeFf))
                 .andThen(
-                    commander.moveShoulder(0d)
+                    commander.moveShoulder(MoveShoulder.RETRACTED)
                         .deadlineWith(
                             commander.closeClaw(),
                             commander.keepArmAt(KeepArmAt.NearConeNode, KeepArmAt.NoConeFf)),
                     commander.dropArm()));
 
-        inputDevice.setArmToStationPickup().whileTrue(
+        inputDevice.setArmToStationPickup().onTrue(
             commander.liftArmTo(KeepArmAt.Substation, KeepArmAt.NoConeFf)
-                .andThen(commander.moveShoulder(15000d)
-                    .alongWith(
-                        commander.keepArmAt(KeepArmAt.Substation, KeepArmAt.NoConeFf),
-                        commander.openClaw())));
+                .andThen(
+                    commander.keepArmAt(KeepArmAt.Substation, KeepArmAt.NoConeFf)
+                        .alongWith(
+                            new WaitCommand(0.5d)
+                                .deadlineWith(commander.openClaw())
+                                .andThen(
+                                    new WaitUntilCommand(claw::isDetecting),
+                                    commander.closeClaw()))));
 
         inputDevice.setArmToStationPickup().onFalse(
             new WaitCommand(0.3d)
-                .deadlineWith(
-                    commander.closeClaw(),
-                    commander.keepArmAt(KeepArmAt.Substation, KeepArmAt.NoConeFf))
-                .andThen(
-                    new WaitUntilCommand(() -> shoulder.getPosition() <= 8000d)
-                        .deadlineWith(
-                            commander.moveShoulder(0d),
-                            commander.keepArmAt(KeepArmAt.Substation, KeepArmAt.FarConeNodeFf)),
-                    commander.moveShoulder(0d)
-                        .alongWith(commander.keepArmAt(KeepArmAt.AboveFloor, 0.15d, KeepArmAt.ConeGroundFf))));
+                .deadlineWith(commander.closeClaw())
+                .andThen(commander.keepArmAt(KeepArmAt.AboveFloor, 0.15d, KeepArmAt.ConeGroundFf)));
 
         inputDevice.turtle().onTrue(
             commander.dropArm()
-                .alongWith(commander.moveShoulder(0d)));
+                .alongWith(commander.moveShoulder(MoveShoulder.RETRACTED)));
 
         inputDevice.slow().whileTrue(new StartEndCommand(
             () -> {
-                inputDevice.setMaxSidewaysSpeed(0.2d);
-                inputDevice.setMaxForwardSpeed(0.2d);
-                inputDevice.setMaxAngularSpeed(0.2d);
+                inputDevice.setMaxSidewaysSpeed(0.4d);
+                inputDevice.setMaxForwardSpeed(0.4d);
+                inputDevice.setMaxAngularSpeed(0.4d);
             },
             () -> {
                 inputDevice.setMaxSidewaysSpeed(1d);
@@ -250,6 +247,7 @@ public class RobotContainer {
      */
     public Command getAutonomousCommand() {
         var commander = new RobotCommander(swerveDrive, shoulder, arm, claw);
+        System.out.println(autonId);
         return autonId == 1 ? Autos.scoreCrossLevelRight(commander)
             : autonId == 2 ? Autos.scoreCrossLevelLeft(commander)
             : autonId == 3 ? Autos.scoreCrossLevelCenter(commander)

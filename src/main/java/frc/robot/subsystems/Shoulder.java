@@ -2,30 +2,30 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkMaxLowLevel;
+import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Shoulder extends SubsystemBase {
-    private TalonSRX reachMotor;
+    private final CANSparkMax reachMotor;
+    private final DutyCycleEncoder encoder;
 
-    public void periodic() {
-//        System.out.println("Shoulder " + getPosition());
+
+    public Shoulder(int motorId, int encoderChannel) {
+        reachMotor = new CANSparkMax(motorId, CANSparkMaxLowLevel.MotorType.kBrushless);
+        encoder = new DutyCycleEncoder(encoderChannel);
     }
 
-    final double topConeH = 18774;
-    final double bottomConeH = 1177;
-    final double stationPickupH = 33;
-    final double groundPickupH = 9260;
-
-
-    public Shoulder(int motorIndex) {
-        reachMotor = new TalonSRX(motorIndex);
+    public void periodic() {
+//        System.out.println("Shoulder: " + getPosition());
     }
 
     public void set(double output) {
-        reachMotor.set(ControlMode.PercentOutput, output);
+        reachMotor.set(output);
     }
 
     public double getPosition() {
-        return reachMotor.getSelectedSensorPosition();
+        return encoder.get();
     }
 }

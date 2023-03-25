@@ -1,12 +1,12 @@
-package frc.robot.commands;
+package frc.robot;
 
 import edu.wpi.first.math.Pair;
 
 import java.util.LinkedList;
 
 public class DoubleQueue {
-    private LinkedList<Double> list = new LinkedList<>();
-    private int capacity;
+    private final LinkedList<Double> list = new LinkedList<>();
+    private final int capacity;
 
     public DoubleQueue(int capacity) {
         this.capacity = capacity;

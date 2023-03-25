@@ -41,7 +41,6 @@ public class KeepArmAt extends CommandBase {
         var position = arm.getPosition();
         var response = MathUtil.clamp(-pid.calculate(position), -maxSpeed, maxSpeed) + feedForward;
         arm.set(response);
-        System.out.println("Arm: " + position + " -> " + pid.getSetpoint());
     }
 
     @Override

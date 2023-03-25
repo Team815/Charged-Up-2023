@@ -1,6 +1,7 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.CommandBase;
+import frc.robot.DoubleQueue;
 import frc.robot.subsystems.SwerveDrive;
 
 public class LevelChargeStation extends CommandBase {
@@ -14,7 +15,7 @@ public class LevelChargeStation extends CommandBase {
 
     public LevelChargeStation(SwerveDrive swerveDrive) {
         super();
-        final int queueCapacity = 8;
+        final int queueCapacity = 4;
         this.swerveDrive = swerveDrive;
         levels = new DoubleQueue(queueCapacity);
         initialAngle = 0d;
@@ -32,7 +33,8 @@ public class LevelChargeStation extends CommandBase {
                 initialAngle = Math.signum(largestLevel);
             }
             double speed;
-            if (range.getSecond() - range.getFirst() > 1 || Math.abs(largestLevel) < threshold) {
+            System.out.println(range.getSecond() - range.getFirst());
+            if (range.getSecond() - range.getFirst() > 0.2d || Math.abs(largestLevel) < threshold) {
                 speed = 0;
             } else if (initialAngle == Math.signum(largestLevel)) {
                 speed = initialSpeed * initialAngle;

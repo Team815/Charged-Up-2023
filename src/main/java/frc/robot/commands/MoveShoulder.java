@@ -9,40 +9,38 @@ public class MoveShoulder extends CommandBase {
     private final Shoulder shoulder;
     private final PIDController pid;
     private final double target;
-    private DoubleQueue buffer;
+    public static final double RETRACTED = 0.220d;
+    public static final double FAR_CONE = RETRACTED - 4.5d;
+    public static final double NEAR_CONE = RETRACTED - 0d;
+    public static final double PICKUP = RETRACTED - 3.5d;
+    public static final double SUBSTATION = RETRACTED - 4d;
 
     public MoveShoulder(Shoulder shoulder, double target) {
         super();
         this.shoulder = shoulder;
-        pid = new PIDController(0.00025d, 0d, 0d);
-        pid.setTolerance(200);
-        buffer = new DoubleQueue(4);
+        pid = new PIDController(2d, 0d, 0d);
+        pid.setTolerance(0.01d);
         this.target = target;
         addRequirements(shoulder);
     }
 
     @Override
     public void initialize() {
-        buffer = new DoubleQueue(8);
         pid.reset();
         pid.setSetpoint(target);
     }
 
     @Override
     public void execute() {
+        final double maxSpeed = 1d;
         var position = shoulder.getPosition();
-//        System.out.println("Shoulder position: " + position);
-        var pidValue = MathUtil.clamp(pid.calculate(position), -0.4d, 0.4d);
-        buffer.add(position);
+        var pidValue = MathUtil.clamp(pid.calculate(position), -maxSpeed, maxSpeed);
         shoulder.set(pidValue);
     }
 
     @Override
     public boolean isFinished() {
-        var range = buffer.range();
-        return buffer.isFull() &&
-            range.getSecond() - range.getFirst() <= 1 &&
-            Math.abs(range.getFirst() - pid.getSetpoint()) < 200;
+        return pid.atSetpoint();
     }
 
     @Override

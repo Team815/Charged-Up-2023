@@ -20,9 +20,8 @@ public final class Autos {
             .andThen(
                 commander.resetGyro(180d),
                 commander.driveTo(4d, 0d, 180d, 0.2d, 0.2d)
-                    .alongWith(commander.liftArmTo(KeepArmAt.FarConeNode, 0.1d)
-                        .withTimeout(3d)),
-                commander.moveShoulder(18000d)
+                    .deadlineWith(commander.keepArmAt(KeepArmAt.FarConeNode, KeepArmAt.FarConeNodeFf)),
+                commander.moveShoulder(MoveShoulder.FAR_CONE)
                     .alongWith(commander.driveTo(0d, 0d, 180d, 0.2d, 0.2d))
                     .deadlineWith(commander.keepArmAt(KeepArmAt.FarConeNode, KeepArmAt.FarConeNodeFf)))
             .withTimeout(4d)
@@ -34,9 +33,9 @@ public final class Autos {
 
     public static CommandBase scoreCross(RobotCommander commander) {
         return score(commander)
-            .andThen(commander.moveShoulder(0d)
+            .andThen(commander.moveShoulder(MoveShoulder.RETRACTED)
                 .alongWith(
-                    commander.driveTo(85d, 0d, 180d, 0.6d, 0.5d),
+                    commander.driveTo(75d, 0d, 180d, 0.6d, 0.5d),
                     commander.closeClaw(),
                     new WaitCommand(0.3d)
                         .deadlineWith(commander.keepArmAt(KeepArmAt.FarConeNode, KeepArmAt.NoConeFf))
@@ -44,8 +43,8 @@ public final class Autos {
     }
 
     private static CommandBase scoreCrossLevel(RobotCommander commander, int direction) {
-        final double chargeStationPositionX = 30d;
-        final double chargeStationPositionY = 41d;
+        final double chargeStationPositionX = 35d;
+        final double chargeStationPositionY = 45d;
         return scoreCross(commander)
             .andThen(
                 commander.driveTo(85d, chargeStationPositionY * Math.signum(direction), 90d, 0.6d, 0.5d),
