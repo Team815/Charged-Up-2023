@@ -53,6 +53,7 @@ public class RobotCommander {
     public MoveShoulder moveShoulder(double target) {
         return new MoveShoulder(shoulder, target);
     }
+    public InstantCommand resetShoulder() { return new InstantCommand(shoulder::ResetPositions); }
 
     // Arm Commands
 

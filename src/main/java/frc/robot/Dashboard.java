@@ -277,10 +277,10 @@ public final class Dashboard {
 
     public static void createAutonomousLayout(String tabName, int column, int row, RobotContainer container) {
         var autonChooser = new SendableChooser<Integer>();
-        autonChooser.setDefaultOption("ScoreCross", 0);
+        autonChooser.addOption("ScoreCross", 0);
         autonChooser.addOption("ScoreCrossLevelRight", 1);
         autonChooser.addOption("ScoreCrossLevelLeft", 2);
-        autonChooser.addOption("ScoreCrossLevelCenter", 3);
+        autonChooser.setDefaultOption("ScoreCrossLevelCenter", 3);
         autonChooser.addOption("Test", 4);
         var tab = Shuffleboard.getTab(tabName);
         var layout = tab

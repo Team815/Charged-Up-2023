@@ -151,19 +151,19 @@ public class RobotContainer {
 
         //Claw
         inputDevice.openClaw().whileTrue(
-            commander.moveShoulder(MoveShoulder.PICKUP)
+            commander.moveShoulder(shoulder.Pickup)
                 .andThen(commander.openClaw()));
 
         inputDevice.openClaw().onFalse(
             commander.closeClaw()
                 .alongWith(new WaitCommand(0.5d))
-                .andThen(commander.moveShoulder(MoveShoulder.RETRACTED)
+                .andThen(commander.moveShoulder(shoulder.Retracted)
                     .alongWith(commander.keepArmAt(KeepArmAt.AboveFloor, KeepArmAt.ConeGroundFf))));
 
         //Arm
         inputDevice.setArmToTopCone().whileTrue(
             commander.liftArmTo(KeepArmAt.FarConeNode, KeepArmAt.FarConeNodeFf)
-                .andThen(commander.moveShoulder(MoveShoulder.FAR_CONE)
+                .andThen(commander.moveShoulder(shoulder.FarCone)
                     .alongWith(commander.keepArmAt(KeepArmAt.FarConeNode, KeepArmAt.FarConeNodeFf))));
 
         inputDevice.setArmToTopCone().onFalse(
@@ -174,15 +174,15 @@ public class RobotContainer {
                 .andThen(
                     new WaitUntilCommand(() -> shoulder.getPosition() >= -1d)
                         .deadlineWith(
-                            commander.moveShoulder(MoveShoulder.RETRACTED),
+                            commander.moveShoulder(shoulder.Retracted),
                             commander.closeClaw(),
                             commander.keepArmAt(KeepArmAt.FarConeNode, KeepArmAt.NoConeFf)),
-                    commander.moveShoulder(MoveShoulder.RETRACTED)
+                    commander.moveShoulder(shoulder.Retracted)
                         .alongWith(commander.dropArm())));
 
         inputDevice.setArmToBottomCone().whileTrue(
             commander.liftArmTo(KeepArmAt.NearConeNode, KeepArmAt.NearConeNodeFf)
-                .andThen(commander.moveShoulder(MoveShoulder.NEAR_CONE)
+                .andThen(commander.moveShoulder(shoulder.NearCone)
                     .alongWith(commander.keepArmAt(KeepArmAt.NearConeNode, KeepArmAt.NearConeNodeFf))));
 
         inputDevice.setArmToBottomCone().onFalse(
@@ -191,7 +191,7 @@ public class RobotContainer {
                     commander.openClaw(),
                     commander.keepArmAt(KeepArmAt.NearConeNode, KeepArmAt.NoConeFf))
                 .andThen(
-                    commander.moveShoulder(MoveShoulder.RETRACTED)
+                    commander.moveShoulder(shoulder.Retracted)
                         .deadlineWith(
                             commander.closeClaw(),
                             commander.keepArmAt(KeepArmAt.NearConeNode, KeepArmAt.NoConeFf)),
@@ -215,13 +215,15 @@ public class RobotContainer {
 
         inputDevice.turtle().onTrue(
             commander.dropArm()
-                .alongWith(commander.moveShoulder(MoveShoulder.RETRACTED)));
+                .alongWith(commander.moveShoulder(shoulder.Retracted)).andThen(
+                    commander.resetShoulder()
+                ));
 
         inputDevice.slow().whileTrue(new StartEndCommand(
             () -> {
-                inputDevice.setMaxSidewaysSpeed(0.4d);
-                inputDevice.setMaxForwardSpeed(0.4d);
-                inputDevice.setMaxAngularSpeed(0.4d);
+                inputDevice.setMaxSidewaysSpeed(0.3d);
+                inputDevice.setMaxForwardSpeed(0.3d);
+                inputDevice.setMaxAngularSpeed(0.3d);
             },
             () -> {
                 inputDevice.setMaxSidewaysSpeed(1d);
@@ -247,12 +249,12 @@ public class RobotContainer {
      */
     public Command getAutonomousCommand() {
         var commander = new RobotCommander(swerveDrive, shoulder, arm, claw);
-        System.out.println(autonId);
+        System.out.println("Auto ID: " + autonId);
         return autonId == 1 ? Autos.scoreCrossLevelRight(commander)
             : autonId == 2 ? Autos.scoreCrossLevelLeft(commander)
             : autonId == 3 ? Autos.scoreCrossLevelCenter(commander)
             : autonId == 4 ? Autos.test(commander)
-            : Autos.scoreCross(commander);
+            : Autos.scoreCrossLevelCenter(commander);
     }
 
     public void setInputDevice(InputDevice inputDevice) {

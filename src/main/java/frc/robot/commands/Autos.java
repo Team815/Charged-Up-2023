@@ -5,6 +5,7 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.*;
+import frc.robot.subsystems.Shoulder;
 
 public final class Autos {
     /**
@@ -21,7 +22,7 @@ public final class Autos {
                 commander.resetGyro(180d),
                 commander.driveTo(4d, 0d, 180d, 0.2d, 0.2d)
                     .deadlineWith(commander.keepArmAt(KeepArmAt.FarConeNode, KeepArmAt.FarConeNodeFf)),
-                commander.moveShoulder(MoveShoulder.FAR_CONE)
+                commander.moveShoulder(Shoulder.FarCone)
                     .alongWith(commander.driveTo(0d, 0d, 180d, 0.2d, 0.2d))
                     .deadlineWith(commander.keepArmAt(KeepArmAt.FarConeNode, KeepArmAt.FarConeNodeFf)))
             .withTimeout(4d)
@@ -33,7 +34,7 @@ public final class Autos {
 
     public static CommandBase scoreCross(RobotCommander commander) {
         return score(commander)
-            .andThen(commander.moveShoulder(MoveShoulder.RETRACTED)
+            .andThen(commander.moveShoulder(Shoulder.Retracted)
                 .alongWith(
                     commander.driveTo(75d, 0d, 180d, 0.6d, 0.5d),
                     commander.closeClaw(),
@@ -43,7 +44,7 @@ public final class Autos {
     }
 
     private static CommandBase scoreCrossLevel(RobotCommander commander, int direction) {
-        final double chargeStationPositionX = 35d;
+        final double chargeStationPositionX = 40d;
         final double chargeStationPositionY = 45d;
         return scoreCross(commander)
             .andThen(
@@ -63,9 +64,16 @@ public final class Autos {
     public static CommandBase scoreCrossLevelCenter(RobotCommander commander) {
         return score(commander)
             .andThen(
-                commander.driveTo(0, 0, 90, 0.2, 0.2),
-                commander.driveTo(90, 0, 90, .4, .4),
-                commander.driveTo(50, 0, 90, .3, .3),
+                commander.moveShoulder(Shoulder.Retracted)
+                .alongWith(
+                    commander.driveTo(10d, 0d, 180d, 0.6d, 0.5d),
+                    commander.closeClaw(),
+                    new WaitCommand(0.3d)
+                        .deadlineWith(commander.keepArmAt(KeepArmAt.FarConeNode, KeepArmAt.NoConeFf))
+                        .andThen(commander.dropArm())),
+                commander.driveTo(10d, 0d, 90d, 0.6d, 0.5d),
+                commander.driveTo(85d, 0d, 90d, 0.25d, 0.5d),
+                commander.driveTo(45d, 0d, 90d, 0.3d, 0.5d),
                 commander.level());
     }
 
@@ -73,7 +81,8 @@ public final class Autos {
         return commander.resetPose()
             .andThen(
                 commander.resetGyro(90d),
-                commander.driveTo(-55d, 0, 90d, 0.3d, 0.5d),
+                commander.driveTo(85d, 0, 90d, 0.2d, 0.5d),
+                commander.driveTo(40d, 0, 90d, 0.2d, 0.5d),
                 commander.level());
     }
 

@@ -9,11 +9,6 @@ public class MoveShoulder extends CommandBase {
     private final Shoulder shoulder;
     private final PIDController pid;
     private final double target;
-    public static final double RETRACTED = 0.220d;
-    public static final double FAR_CONE = RETRACTED - 4.5d;
-    public static final double NEAR_CONE = RETRACTED - 0d;
-    public static final double PICKUP = RETRACTED - 3.5d;
-    public static final double SUBSTATION = RETRACTED - 4d;
 
     public MoveShoulder(Shoulder shoulder, double target) {
         super();
@@ -32,7 +27,7 @@ public class MoveShoulder extends CommandBase {
 
     @Override
     public void execute() {
-        final double maxSpeed = 1d;
+        final double maxSpeed = .9d;
         var position = shoulder.getPosition();
         var pidValue = MathUtil.clamp(pid.calculate(position), -maxSpeed, maxSpeed);
         shoulder.set(pidValue);

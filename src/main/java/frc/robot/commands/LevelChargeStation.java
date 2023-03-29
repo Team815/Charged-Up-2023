@@ -15,7 +15,7 @@ public class LevelChargeStation extends CommandBase {
 
     public LevelChargeStation(SwerveDrive swerveDrive) {
         super();
-        final int queueCapacity = 4;
+        final int queueCapacity = 8;
         this.swerveDrive = swerveDrive;
         levels = new DoubleQueue(queueCapacity);
         initialAngle = 0d;
@@ -24,7 +24,8 @@ public class LevelChargeStation extends CommandBase {
 
     @Override
     public void execute() {
-        final var threshold = 0d;
+        final var threshold = 4d;
+        final var maxVariance = 0.2d;
         var level = swerveDrive.getAngles().getRoll();
         if (levels.isFull()) {
             var range = levels.range();
@@ -33,8 +34,8 @@ public class LevelChargeStation extends CommandBase {
                 initialAngle = Math.signum(largestLevel);
             }
             double speed;
-            System.out.println(range.getSecond() - range.getFirst());
-            if (range.getSecond() - range.getFirst() > 0.2d || Math.abs(largestLevel) < threshold) {
+//            System.out.println(range.getSecond() - range.getFirst());
+            if (range.getSecond() - range.getFirst() > maxVariance || Math.abs(largestLevel) < threshold) {
                 speed = 0;
             } else if (initialAngle == Math.signum(largestLevel)) {
                 speed = initialSpeed * initialAngle;
