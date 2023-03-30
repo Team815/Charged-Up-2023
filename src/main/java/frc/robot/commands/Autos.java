@@ -22,7 +22,7 @@ public final class Autos {
                 commander.resetGyro(180d),
                 commander.driveTo(4d, 0d, 180d, 0.2d, 0.2d)
                     .deadlineWith(commander.keepArmAt(KeepArmAt.FarConeNode, KeepArmAt.FarConeNodeFf)),
-                commander.moveShoulder(Shoulder.FarCone)
+                commander.moveShoulder(MoveShoulder.Position.FAR_CONE)
                     .alongWith(commander.driveTo(0d, 0d, 180d, 0.2d, 0.2d))
                     .deadlineWith(commander.keepArmAt(KeepArmAt.FarConeNode, KeepArmAt.FarConeNodeFf)))
             .withTimeout(4d)
@@ -32,9 +32,9 @@ public final class Autos {
                     commander.keepArmAt(KeepArmAt.FarConeNode, KeepArmAt.NoConeFf)));
     }
 
-    public static CommandBase scoreCross(RobotCommander commander) {
+    private static CommandBase scoreCross(RobotCommander commander) {
         return score(commander)
-            .andThen(commander.moveShoulder(Shoulder.Retracted)
+            .andThen(commander.moveShoulder(MoveShoulder.Position.RETRACTED)
                 .alongWith(
                     commander.driveTo(75d, 0d, 180d, 0.6d, 0.5d),
                     commander.closeClaw(),
@@ -64,14 +64,16 @@ public final class Autos {
     public static CommandBase scoreCrossLevelCenter(RobotCommander commander) {
         return score(commander)
             .andThen(
-                commander.moveShoulder(Shoulder.Retracted)
+                commander.moveShoulder(MoveShoulder.Position.RETRACTED)
                 .alongWith(
-                    commander.driveTo(10d, 0d, 180d, 0.6d, 0.5d),
                     commander.closeClaw(),
                     new WaitCommand(0.3d)
-                        .deadlineWith(commander.keepArmAt(KeepArmAt.FarConeNode, KeepArmAt.NoConeFf))
-                        .andThen(commander.dropArm())),
-                commander.driveTo(10d, 0d, 90d, 0.6d, 0.5d),
+                        .deadlineWith(
+                            commander.keepArmAt(KeepArmAt.FarConeNode, KeepArmAt.NoConeFf),
+                            commander.driveTo(5d, 0d, 180d, 0.6d, 0.5d))
+                        .andThen(
+                            commander.dropArm()
+                                .deadlineWith(commander.driveTo(5d, 0d, 90d, 0.6d, 0.5d)))),
                 commander.driveTo(85d, 0d, 90d, 0.25d, 0.5d),
                 commander.driveTo(45d, 0d, 90d, 0.3d, 0.5d),
                 commander.level());
@@ -81,38 +83,7 @@ public final class Autos {
         return commander.resetPose()
             .andThen(
                 commander.resetGyro(90d),
-                commander.driveTo(85d, 0, 90d, 0.2d, 0.5d),
-                commander.driveTo(40d, 0, 90d, 0.2d, 0.5d),
+                commander.driveTo(-40d, 0, 90d, 0.2d, 0.5d),
                 commander.level());
     }
-
-//    public CommandBase MySwerveControllerCommand() {
-//        var config = new TrajectoryConfig(2d, 0.2d).setKinematics(kinematics);
-//
-//        var exampleTrajectory =
-//            TrajectoryGenerator.generateTrajectory(
-//                new Pose2d(0, 0, new Rotation2d(0)),
-//                List.of(new Translation2d(5, 5), new Translation2d(10, -5)),
-//                new Pose2d(10, 0, new Rotation2d(0)),
-//                config);
-//        var thetaController =
-//            new ProfiledPIDController(
-//                0.1d, 0, 0, new TrapezoidProfile.Constraints(1d, 1d));
-//        thetaController.enableContinuousInput(0, 360);
-//
-//        System.out.println(exampleTrajectory.getStates().size());
-//        for (var state : exampleTrajectory.getStates()) {
-//            System.out.println(state.toString());
-//        }
-//
-//        return new SwerveControllerCommand(
-//            exampleTrajectory,
-//            this::getPose,
-//            kinematics,
-//            new PIDController(0.1d, 0d, 0d),
-//            new PIDController(0.1d, 0d, 0d),
-//            thetaController,
-//            this::setSwerveModuleStates,
-//            this);
-//    }
 }

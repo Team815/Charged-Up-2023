@@ -277,11 +277,10 @@ public final class Dashboard {
 
     public static void createAutonomousLayout(String tabName, int column, int row, RobotContainer container) {
         var autonChooser = new SendableChooser<Integer>();
-        autonChooser.addOption("ScoreCross", 0);
+        autonChooser.setDefaultOption("ScoreCrossLevelCenter", 0);
         autonChooser.addOption("ScoreCrossLevelRight", 1);
         autonChooser.addOption("ScoreCrossLevelLeft", 2);
-        autonChooser.setDefaultOption("ScoreCrossLevelCenter", 3);
-        autonChooser.addOption("Test", 4);
+        autonChooser.addOption("Test", 3);
         var tab = Shuffleboard.getTab(tabName);
         var layout = tab
             .getLayout("Robot", BuiltInLayouts.kGrid)
@@ -321,7 +320,7 @@ public final class Dashboard {
             .withPosition(0, 0);
 
         layout
-            .addString("Detects", () -> claw.isOpen() ? "Open" : "Closed")
+            .addString("Detects", () -> claw.isDetecting() ? "Detecting" : "Not detecting")
             .withPosition(0, 0);
 
     }

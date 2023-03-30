@@ -22,9 +22,9 @@ public class DriveTo extends CommandBase {
         this.swerveDrive = swerveDrive;
         linearPid = new PIDController(0.03d, 0.001d, 0d);
         linearPid.setTolerance(0.5d);
-        angularPid = new PIDController(0.01d, 0d, 0d);
+        angularPid = new PIDController(0.012d, 0d, 0d);
         angularPid.enableContinuousInput(0d, 360d);
-        angularPid.setTolerance(4d);
+        angularPid.setTolerance(5d);
         angularPid.setSetpoint(target.getRotation().getDegrees());
         this.maxLinearSpeed = Math.abs(maxLinearSpeed);
         this.maxAngularSpeed = Math.abs(maxAngularSpeed);
@@ -48,7 +48,7 @@ public class DriveTo extends CommandBase {
 
     @Override
     public boolean isFinished() {
-        return linearPid.atSetpoint();// && angularPid.atSetpoint();
+        return linearPid.atSetpoint() && angularPid.atSetpoint();
     }
 
     @Override

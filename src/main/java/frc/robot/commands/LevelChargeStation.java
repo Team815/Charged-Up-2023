@@ -34,7 +34,6 @@ public class LevelChargeStation extends CommandBase {
                 initialAngle = Math.signum(largestLevel);
             }
             double speed;
-//            System.out.println(range.getSecond() - range.getFirst());
             if (range.getSecond() - range.getFirst() > maxVariance || Math.abs(largestLevel) < threshold) {
                 speed = 0;
             } else if (initialAngle == Math.signum(largestLevel)) {

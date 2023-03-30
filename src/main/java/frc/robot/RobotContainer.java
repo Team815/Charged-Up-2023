@@ -5,6 +5,7 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.Compressor;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj2.command.*;
@@ -118,6 +119,7 @@ public class RobotContainer {
         Dashboard.createShoulderLayout(readingsTab, 2, 3, shoulder::getPosition);
         Dashboard.createArmLayout(readingsTab, 4, 0, arm);
         Dashboard.createAutonomousLayout(readingsTab, 6, 0, this);
+        Dashboard.createClawLayout(readingsTab, 4, 1, claw);
 
         configureBindings();
     }
@@ -151,19 +153,19 @@ public class RobotContainer {
 
         //Claw
         inputDevice.openClaw().whileTrue(
-            commander.moveShoulder(shoulder.Pickup)
+            commander.moveShoulder(MoveShoulder.Position.PICKUP)
                 .andThen(commander.openClaw()));
 
         inputDevice.openClaw().onFalse(
             commander.closeClaw()
                 .alongWith(new WaitCommand(0.5d))
-                .andThen(commander.moveShoulder(shoulder.Retracted)
+                .andThen(commander.moveShoulder(MoveShoulder.Position.RETRACTED)
                     .alongWith(commander.keepArmAt(KeepArmAt.AboveFloor, KeepArmAt.ConeGroundFf))));
 
         //Arm
         inputDevice.setArmToTopCone().whileTrue(
             commander.liftArmTo(KeepArmAt.FarConeNode, KeepArmAt.FarConeNodeFf)
-                .andThen(commander.moveShoulder(shoulder.FarCone)
+                .andThen(commander.moveShoulder(MoveShoulder.Position.FAR_CONE)
                     .alongWith(commander.keepArmAt(KeepArmAt.FarConeNode, KeepArmAt.FarConeNodeFf))));
 
         inputDevice.setArmToTopCone().onFalse(
@@ -174,15 +176,15 @@ public class RobotContainer {
                 .andThen(
                     new WaitUntilCommand(() -> shoulder.getPosition() >= -1d)
                         .deadlineWith(
-                            commander.moveShoulder(shoulder.Retracted),
+                            commander.moveShoulder(MoveShoulder.Position.RETRACTED),
                             commander.closeClaw(),
                             commander.keepArmAt(KeepArmAt.FarConeNode, KeepArmAt.NoConeFf)),
-                    commander.moveShoulder(shoulder.Retracted)
+                    commander.moveShoulder(MoveShoulder.Position.RETRACTED)
                         .alongWith(commander.dropArm())));
 
         inputDevice.setArmToBottomCone().whileTrue(
             commander.liftArmTo(KeepArmAt.NearConeNode, KeepArmAt.NearConeNodeFf)
-                .andThen(commander.moveShoulder(shoulder.NearCone)
+                .andThen(commander.moveShoulder(MoveShoulder.Position.NEAR_CONE)
                     .alongWith(commander.keepArmAt(KeepArmAt.NearConeNode, KeepArmAt.NearConeNodeFf))));
 
         inputDevice.setArmToBottomCone().onFalse(
@@ -191,7 +193,7 @@ public class RobotContainer {
                     commander.openClaw(),
                     commander.keepArmAt(KeepArmAt.NearConeNode, KeepArmAt.NoConeFf))
                 .andThen(
-                    commander.moveShoulder(shoulder.Retracted)
+                    commander.moveShoulder(MoveShoulder.Position.RETRACTED)
                         .deadlineWith(
                             commander.closeClaw(),
                             commander.keepArmAt(KeepArmAt.NearConeNode, KeepArmAt.NoConeFf)),
@@ -215,8 +217,8 @@ public class RobotContainer {
 
         inputDevice.turtle().onTrue(
             commander.dropArm()
-                .alongWith(commander.moveShoulder(shoulder.Retracted)).andThen(
-                    commander.resetShoulder()
+                .alongWith(commander.moveShoulder(MoveShoulder.Position.RETRACTED))
+                .andThen(commander.resetShoulder()
                 ));
 
         inputDevice.slow().whileTrue(new StartEndCommand(
@@ -249,12 +251,12 @@ public class RobotContainer {
      */
     public Command getAutonomousCommand() {
         var commander = new RobotCommander(swerveDrive, shoulder, arm, claw);
-        System.out.println("Auto ID: " + autonId);
-        return autonId == 1 ? Autos.scoreCrossLevelRight(commander)
+        var auton = autonId == 0 ? Autos.scoreCrossLevelCenter(commander)
+            : autonId == 1 ? Autos.scoreCrossLevelRight(commander)
             : autonId == 2 ? Autos.scoreCrossLevelLeft(commander)
-            : autonId == 3 ? Autos.scoreCrossLevelCenter(commander)
-            : autonId == 4 ? Autos.test(commander)
+            : autonId == 3 ? Autos.test(commander)
             : Autos.scoreCrossLevelCenter(commander);
+        return auton.withTimeout(14.8d).andThen(new RunCommand(() -> swerveDrive.drive(0d, 0d, 0d)));
     }
 
     public void setInputDevice(InputDevice inputDevice) {

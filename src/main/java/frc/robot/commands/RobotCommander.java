@@ -50,10 +50,10 @@ public class RobotCommander {
 
     // Shoulder Commands
 
-    public MoveShoulder moveShoulder(double target) {
+    public MoveShoulder moveShoulder(MoveShoulder.Position target) {
         return new MoveShoulder(shoulder, target);
     }
-    public InstantCommand resetShoulder() { return new InstantCommand(shoulder::ResetPositions); }
+    public InstantCommand resetShoulder() { return new InstantCommand(shoulder::resetPosition); }
 
     // Arm Commands
 
