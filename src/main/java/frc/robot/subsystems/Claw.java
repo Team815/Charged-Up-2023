@@ -9,17 +9,18 @@ import frc.robot.GamePieceDetector;
 public class Claw extends SubsystemBase {
     private final Compressor compressor;
     private final Solenoid solenoid;
-    private final GamePieceDetector detector;
+    private final GamePieceDetector detector = new GamePieceDetector();
+    //private final BooleanQueue<Boolean> isDetecting = new BooleanQueue<>(2);
     private boolean isDetecting;
 
     public Claw(Compressor compressor, Solenoid solenoid) {
         this.compressor = compressor;
         this.solenoid = solenoid;
-        detector = new GamePieceDetector();
     }
 
     @Override
     public void periodic() {
+//        isDetecting.add(isDetectingPrivate());
         isDetecting = isDetectingPrivate();
     }
 
@@ -36,6 +37,7 @@ public class Claw extends SubsystemBase {
     }
 
     public boolean isDetecting() {
+//        return !isDetecting.allFalse();
         return isDetecting;
     }
 

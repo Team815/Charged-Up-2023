@@ -10,8 +10,8 @@ public class LevelChargeStation extends CommandBase {
     private final DoubleQueue levels;
     private double initialAngle;
 
-    private static final double initialSpeed = 0.1d;
-    private static final double subsequentSpeed = 0.07d;
+    private static final double initialSpeed = 0.12d;
+    private static final double subsequentSpeed = 0.09d;
 
     public LevelChargeStation(SwerveDrive swerveDrive) {
         super();

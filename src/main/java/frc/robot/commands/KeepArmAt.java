@@ -12,10 +12,10 @@ public class KeepArmAt extends CommandBase {
     private final double maxSpeed;
     private final double feedForward;
 
-    public static final double FarConeNode = -0.120d;
-    public static final double NearConeNode = -0.08d;
-    public static final double Substation = -0.07d;
-    public static final double AboveFloor = 0.11d;
+    public static final double FarConeNode = Arm.RETRACTED - 0.235d;
+    public static final double NearConeNode = Arm.RETRACTED - 0.195d;
+    public static final double Substation = Arm.RETRACTED - 0.19d;
+    public static final double AboveFloor = Arm.RETRACTED - 0.01d;
     public static final double NoConeFf = 0.06d;
     public static final double FarConeNodeFf = 0.07d;
     public static final double NearConeNodeFf = 0.08d;
@@ -25,6 +25,7 @@ public class KeepArmAt extends CommandBase {
         super();
         this.arm = arm;
         pid = new PIDController(2d, 0d, 0d);
+        pid.enableContinuousInput(0, 1);
         this.target = target;
         this.maxSpeed = maxSpeed;
         this.feedForward = feedForward;

@@ -4,6 +4,7 @@ import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -23,7 +24,7 @@ public class Shoulder extends SubsystemBase {
     }
 
     public void periodic() {
-        //System.out.println("Shoulder: " + getPosition());
+//        System.out.println("Shoulder: " + getPosition());
     }
 
     public void set(double output) {

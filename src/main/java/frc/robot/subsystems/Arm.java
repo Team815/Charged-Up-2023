@@ -7,6 +7,7 @@ import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Arm extends SubsystemBase {
+    public static final double RETRACTED = 0.632d;
     private final MotorControllerGroup liftMotors;
     private final DutyCycleEncoder encoder;
 

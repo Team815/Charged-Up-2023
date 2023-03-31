@@ -7,7 +7,6 @@ import frc.robot.subsystems.Arm;
 public class DropArm extends CommandBase {
     Arm arm;
     private final PIDController pid;
-    public static boolean isRunning = false;
 
     public DropArm(Arm arm) {
         this.arm = arm;
@@ -18,12 +17,11 @@ public class DropArm extends CommandBase {
 
     @Override
     public void initialize() {
-        pid.setSetpoint(0.135d);
+        pid.setSetpoint(Arm.RETRACTED);
     }
 
     @Override
     public void execute() {
-        isRunning = true;
         var output = -pid.calculate(arm.getPosition());
 //        System.out.println(output);
         arm.set(output);
@@ -40,6 +38,5 @@ public class DropArm extends CommandBase {
             System.out.println("DropArm finished");
         }
         arm.set(0d);
-        isRunning = false;
     }
 }

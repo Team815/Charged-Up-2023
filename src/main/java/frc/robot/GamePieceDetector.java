@@ -1,5 +1,6 @@
 package frc.robot;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.SerialPort;
 
 import java.nio.charset.StandardCharsets;
@@ -22,10 +23,24 @@ public class GamePieceDetector {
                 .filter(s -> !s.isEmpty())
                 .toArray(String[]::new);
 
-        if(readings.length == 0)
+        if (readings.length == 0)
             return Optional.empty();
 
-        var value = Integer.valueOf(readings[readings.length - 1]);
-        return Optional.of(value);
+        try {
+            var value = Integer.valueOf(readings[readings.length - 1]);
+            return Optional.of(value);
+        } catch (NumberFormatException e) {
+            var mode = DriverStation.isAutonomous() ? "Autonomous"
+                : DriverStation.isTeleop() ? "Teleop"
+                : DriverStation.isTest() ? "Test"
+                : "Unknown";
+            System.out.printf(
+                "HANDLED ERROR - %s %f: %s%n",
+                mode,
+                DriverStation.getMatchTime(),
+                e.getMessage());
+            return Optional.empty();
+        }
+
     }
 }

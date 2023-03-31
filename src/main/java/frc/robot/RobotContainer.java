@@ -26,7 +26,7 @@ public class RobotContainer {
     private InputDevice inputDevice;
     private final SwerveDrive swerveDrive;
     private final Claw claw;
-    private final GamePieceLimelight limelight;
+    //private final GamePieceLimelight limelight;
     private final Arm arm;
     private final Shoulder shoulder;
     private int autonId;
@@ -90,7 +90,7 @@ public class RobotContainer {
             new Solenoid(compressorPort, PneumaticsModuleType.CTREPCM, solenoidChannel)
         );
 
-        limelight = new GamePieceLimelight("limelight-field");
+        //limelight = new GamePieceLimelight("limelight-field");
 
         inputDevice = new XboxController();
 
@@ -115,7 +115,7 @@ public class RobotContainer {
         Dashboard.createPoseLayout(readingsTab, 0, 0, swerveDrive::getPose);
         Dashboard.createVelocityLayout(readingsTab, 0, 2, swerveDrive::getSpeeds);
         Dashboard.createAnglesLayout(readingsTab, 2, 0, swerveDrive::getAngles);
-        Dashboard.createLimelightLayout(readingsTab, 2, 2, limelight);
+        //Dashboard.createLimelightLayout(readingsTab, 2, 2, limelight);
         Dashboard.createShoulderLayout(readingsTab, 2, 3, shoulder::getPosition);
         Dashboard.createArmLayout(readingsTab, 4, 0, arm);
         Dashboard.createAutonomousLayout(readingsTab, 6, 0, this);
@@ -140,16 +140,16 @@ public class RobotContainer {
         inputDevice.resetHeading().onTrue(commander.resetGyro(0));
 
         //Limelight
-        inputDevice.cycleLimelightTarget().onTrue(new InstantCommand(limelight::cycleTarget));
+//        inputDevice.cycleLimelightTarget().onTrue(new InstantCommand(limelight::cycleTarget));
 
         //Center Target
-        inputDevice.centerOnTarget().whileTrue(new CenterOnTarget(
-            swerveDrive,
-            limelight::getHorizontalOffset,
-            () -> inputDevice.getForwardVelocity(),
-            () -> inputDevice.getSidewaysVelocity(),
-            0.02d,
-            inputDevice.setArmToStationPickup().getAsBoolean() ? 0.05d : 1d));
+//        inputDevice.centerOnTarget().whileTrue(new CenterOnTarget(
+//            swerveDrive,
+//            limelight::getHorizontalOffset,
+//            () -> inputDevice.getForwardVelocity(),
+//            () -> inputDevice.getSidewaysVelocity(),
+//            0.02d,
+//            inputDevice.setArmToStationPickup().getAsBoolean() ? 0.05d : 1d));
 
         //Claw
         inputDevice.openClaw().whileTrue(
@@ -223,9 +223,9 @@ public class RobotContainer {
 
         inputDevice.slow().whileTrue(new StartEndCommand(
             () -> {
-                inputDevice.setMaxSidewaysSpeed(0.3d);
-                inputDevice.setMaxForwardSpeed(0.3d);
-                inputDevice.setMaxAngularSpeed(0.3d);
+                inputDevice.setMaxSidewaysSpeed(0.2d);
+                inputDevice.setMaxForwardSpeed(0.2d);
+                inputDevice.setMaxAngularSpeed(0.2d);
             },
             () -> {
                 inputDevice.setMaxSidewaysSpeed(1d);

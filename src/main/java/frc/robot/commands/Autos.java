@@ -75,7 +75,7 @@ public final class Autos {
                             commander.dropArm()
                                 .deadlineWith(commander.driveTo(5d, 0d, 90d, 0.6d, 0.5d)))),
                 commander.driveTo(85d, 0d, 90d, 0.25d, 0.5d),
-                commander.driveTo(45d, 0d, 90d, 0.3d, 0.5d),
+                commander.driveTo(42d, 0d, 90d, 0.3d, 0.5d),
                 commander.level());
     }
 
