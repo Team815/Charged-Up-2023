@@ -24,60 +24,60 @@ public final class Dashboard {
         throw new AssertionError("utility class");
     }
 
-    public static void createSwerveDriveConfigLayout(String tabName, int column, int row, SwerveDrive swerveDrive) {
-        var inst = NetworkTableInstance.getDefault();
-        var layout = Shuffleboard.getTab(tabName)
-            .getLayout("Swerve Drive", BuiltInLayouts.kGrid)
-            .withSize(2, 2)
-            .withPosition(column, row)
-            .withProperties(Map.of("Label position", "LEFT", "Number of columns", 1, "Number of rows", 6));
-
-        var autoCorrectEnabledEntry = layout
-            .add("Auto Correct", SwerveDrive.DEFAULT_AUTO_CORRECT_ENABLED)
-            .withWidget(BuiltInWidgets.kToggleSwitch)
-            .withPosition(0, 0)
-            .getEntry();
-        inst.addListener(
-            autoCorrectEnabledEntry,
-            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
-            e -> swerveDrive.setAutoCorrectEnabled(e.valueData.value.getBoolean()));
-
-        var autoCorrectDelayEntry = layout
-            .add("Auto Correct Delay", SwerveDrive.DEFAULT_AUTO_CORRECT_DELAY)
-            .withPosition(0, 1)
-            .getEntry();
-        inst.addListener(
-            autoCorrectDelayEntry,
-            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
-            e -> swerveDrive.setAutoCorrectDelay(e.valueData.value.getDouble()));
-
-        var maxLinearAccelerationEntry = layout
-            .add("Max Linear Acceleration", SwerveDrive.DEFAULT_MAX_LINEAR_ACCELERATION)
-            .withPosition(0, 2)
-            .getEntry();
-        inst.addListener(
-            maxLinearAccelerationEntry,
-            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
-            e -> swerveDrive.setMaxLinearAcceleration(e.valueData.value.getDouble()));
-
-        var maxAngularAccelerationEntry = layout
-            .add("Max Angular Acceleration", SwerveDrive.DEFAULT_MAX_ANGULAR_ACCELERATION)
-            .withPosition(0, 3)
-            .getEntry();
-        inst.addListener(
-            maxAngularAccelerationEntry,
-            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
-            e -> swerveDrive.setMaxAngularAcceleration(e.valueData.value.getDouble()));
-
-        var maxAutoCorrectSpeedEntry = layout
-            .add("Max Auto-Correct Speed", SwerveDrive.DEFAULT_MAX_AUTO_CORRECT_SPEED)
-            .withPosition(0, 4)
-            .getEntry();
-        inst.addListener(
-            maxAutoCorrectSpeedEntry,
-            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
-            e -> swerveDrive.setMaxAutoCorrectSpeed(e.valueData.value.getDouble()));
-    }
+//    public static void createSwerveDriveConfigLayout(String tabName, int column, int row, SwerveDrive swerveDrive) {
+//        var inst = NetworkTableInstance.getDefault();
+//        var layout = Shuffleboard.getTab(tabName)
+//            .getLayout("Swerve Drive", BuiltInLayouts.kGrid)
+//            .withSize(2, 2)
+//            .withPosition(column, row)
+//            .withProperties(Map.of("Label position", "LEFT", "Number of columns", 1, "Number of rows", 6));
+//
+//        var autoCorrectEnabledEntry = layout
+//            .add("Auto Correct", SwerveDrive.DEFAULT_AUTO_CORRECT_ENABLED)
+//            .withWidget(BuiltInWidgets.kToggleSwitch)
+//            .withPosition(0, 0)
+//            .getEntry();
+//        inst.addListener(
+//            autoCorrectEnabledEntry,
+//            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
+//            e -> swerveDrive.setAutoCorrectEnabled(e.valueData.value.getBoolean()));
+//
+//        var autoCorrectDelayEntry = layout
+//            .add("Auto Correct Delay", SwerveDrive.DEFAULT_AUTO_CORRECT_DELAY)
+//            .withPosition(0, 1)
+//            .getEntry();
+//        inst.addListener(
+//            autoCorrectDelayEntry,
+//            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
+//            e -> swerveDrive.setAutoCorrectDelay(e.valueData.value.getDouble()));
+//
+//        var maxLinearAccelerationEntry = layout
+//            .add("Max Linear Acceleration", SwerveDrive.DEFAULT_MAX_LINEAR_ACCELERATION)
+//            .withPosition(0, 2)
+//            .getEntry();
+//        inst.addListener(
+//            maxLinearAccelerationEntry,
+//            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
+//            e -> swerveDrive.setMaxLinearAcceleration(e.valueData.value.getDouble()));
+//
+//        var maxAngularAccelerationEntry = layout
+//            .add("Max Angular Acceleration", SwerveDrive.DEFAULT_MAX_ANGULAR_ACCELERATION)
+//            .withPosition(0, 3)
+//            .getEntry();
+//        inst.addListener(
+//            maxAngularAccelerationEntry,
+//            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
+//            e -> swerveDrive.setMaxAngularAcceleration(e.valueData.value.getDouble()));
+//
+//        var maxAutoCorrectSpeedEntry = layout
+//            .add("Max Auto-Correct Speed", SwerveDrive.DEFAULT_MAX_AUTO_CORRECT_SPEED)
+//            .withPosition(0, 4)
+//            .getEntry();
+//        inst.addListener(
+//            maxAutoCorrectSpeedEntry,
+//            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
+//            e -> swerveDrive.setMaxAutoCorrectSpeed(e.valueData.value.getDouble()));
+//    }
 
     public static void createSwerveModuleLayout(String tabName, int column, int row, SwerveModule... swerveModules) {
         var inst = NetworkTableInstance.getDefault();

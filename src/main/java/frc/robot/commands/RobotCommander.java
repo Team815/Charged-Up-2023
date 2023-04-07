@@ -4,10 +4,14 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.RunCommand;
+import frc.robot.input.InputDevice;
 import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Claw;
 import frc.robot.subsystems.Shoulder;
 import frc.robot.subsystems.SwerveDrive;
+
+import java.util.function.DoubleSupplier;
 
 public class RobotCommander {
     private final SwerveDrive swerveDrive;
@@ -54,7 +58,10 @@ public class RobotCommander {
     public MoveShoulder moveShoulder(MoveShoulder.Position target) {
         return new MoveShoulder(shoulder, target);
     }
-    public InstantCommand resetShoulder() { return new InstantCommand(shoulder::resetPosition, shoulder); }
+
+    public InstantCommand resetShoulder() {
+        return new InstantCommand(shoulder::resetPosition, shoulder);
+    }
 
     // Arm Commands
 
@@ -94,5 +101,38 @@ public class RobotCommander {
 
     public InstantCommand closeClaw() {
         return new InstantCommand(claw::close, claw);
+    }
+
+    public RunCommand simpleDrive(
+        DoubleSupplier forwardVelocitySupplier,
+        DoubleSupplier sidewaysVelocitySupplier,
+        DoubleSupplier angularVelocitySupplier) {
+        return new RunCommand(() -> swerveDrive.drive(
+            forwardVelocitySupplier.getAsDouble(),
+            sidewaysVelocitySupplier.getAsDouble(),
+            angularVelocitySupplier.getAsDouble()),
+            swerveDrive);
+    }
+
+    public AccelerationDrive accelerationDrive(
+        DoubleSupplier forwardVelocitySupplier,
+        DoubleSupplier sidewaysVelocitySupplier,
+        DoubleSupplier angularVelocitySupplier) {
+        return new AccelerationDrive(
+            swerveDrive,
+            forwardVelocitySupplier,
+            sidewaysVelocitySupplier,
+            angularVelocitySupplier);
+    }
+
+    public AutoCorrectDrive autoCorrectDrive(
+        DoubleSupplier forwardVelocitySupplier,
+        DoubleSupplier sidewaysVelocitySupplier,
+        DoubleSupplier angularVelocitySupplier) {
+        return new AutoCorrectDrive(
+            swerveDrive,
+            forwardVelocitySupplier,
+            sidewaysVelocitySupplier,
+            angularVelocitySupplier);
     }
 }

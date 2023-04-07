@@ -32,11 +32,6 @@ public class DriveTo extends CommandBase {
     }
 
     @Override
-    public void initialize() {
-        swerveDrive.setAngle(target.getRotation().getDegrees());
-    }
-
-    @Override
     public void execute() {
         var pose = swerveDrive.getPose();
         var difference = target.minus(swerveDrive.getPose()).getTranslation();

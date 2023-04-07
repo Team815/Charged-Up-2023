@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import com.ctre.phoenix.sensors.Pigeon2;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
@@ -79,7 +81,15 @@ public class RobotContainer {
             backRightRotateSensorId,
             backRightAngularOffset);
 
-        swerveDrive = new SwerveDrive(moduleFrontLeft, moduleFrontRight, moduleBackLeft, moduleBackRight);
+        final var halfLength = 0.368d;
+        final var halfWidth = 0.368d;
+
+        swerveDrive = new SwerveDrive(
+            new Pigeon2(0),
+            new SwerveDriveModule(moduleFrontLeft, halfLength, halfWidth),
+            new SwerveDriveModule(moduleFrontRight, halfLength, -halfWidth),
+            new SwerveDriveModule(moduleBackLeft, -halfLength, halfWidth),
+            new SwerveDriveModule(moduleBackRight, -halfLength, -halfWidth));
 
         final var compressorPort = 30;
         final var solenoidChannel = 0;
@@ -106,13 +116,13 @@ public class RobotContainer {
         // Shuffleboard config tab
 
         Dashboard.createSwerveModuleLayout(configTab, 0, 0, moduleFrontLeft, moduleFrontRight, moduleBackLeft, moduleBackRight);
-        Dashboard.createSwerveDriveConfigLayout(configTab, 0, 2, swerveDrive);
+//        Dashboard.createSwerveDriveConfigLayout(configTab, 0, 2, swerveDrive);
         Dashboard.createControllerLayout(configTab, 2, 0, () -> inputDevice, this);
 
         // Shuffleboard readings tab
 
         Dashboard.createPoseLayout(readingsTab, 0, 0, swerveDrive::getPose);
-        Dashboard.createVelocityLayout(readingsTab, 0, 2, swerveDrive::getSpeeds);
+//        Dashboard.createVelocityLayout(readingsTab, 0, 2, swerveDrive::getSpeeds);
         Dashboard.createAnglesLayout(readingsTab, 2, 0, swerveDrive::getAngles);
         //Dashboard.createLimelightLayout(readingsTab, 2, 2, limelight);
         Dashboard.createShoulderLayout(readingsTab, 2, 3, shoulder::getPosition);
@@ -253,12 +263,10 @@ public class RobotContainer {
 //        inputDevice.test1().onTrue(new InstantCommand(() -> arm.set(arm.getPower() + 0.01d)));
 //        inputDevice.test2().onTrue(new InstantCommand(() -> arm.set(arm.getPower() - 0.01d)));
 
-        swerveDrive.setDefaultCommand(
-            new RunCommand(() -> swerveDrive.drive(
-                inputDevice.getForwardVelocity(),
-                inputDevice.getSidewaysVelocity(),
-                inputDevice.getAngularVelocity()),
-                swerveDrive));
+        swerveDrive.setDefaultCommand(commander.simpleDrive(
+            () -> inputDevice.getForwardVelocity(),
+            () -> inputDevice.getSidewaysVelocity(),
+            () -> inputDevice.getAngularVelocity()));
     }
 
     /**
