@@ -7,7 +7,7 @@ import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Arm extends SubsystemBase {
-    public static final double RETRACTED = 0.632d;
+    public static final double RETRACTED = 0.462d;
     private final MotorControllerGroup liftMotors;
     private final DutyCycleEncoder encoder;
 
@@ -20,11 +20,17 @@ public class Arm extends SubsystemBase {
         liftMotor2.setIdleMode(CANSparkMax.IdleMode.kBrake);
         liftMotor1.setInverted(true);
         liftMotors = new MotorControllerGroup(liftMotor1, liftMotor2);
-        encoder = new DutyCycleEncoder(0);
+        encoder = new DutyCycleEncoder(2);
     }
 
     public void set(double output) {
+        System.out.println(output);
         liftMotors.set(output);
+    }
+
+    public void reset() {
+        encoder.reset();
+        encoder.setPositionOffset(RETRACTED);
     }
 
     public double getPower() {

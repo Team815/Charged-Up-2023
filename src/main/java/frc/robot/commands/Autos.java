@@ -25,7 +25,7 @@ public final class Autos {
                 commander.moveShoulder(MoveShoulder.Position.FAR_CONE)
                     .alongWith(commander.driveTo(0d, 0d, 180d, 0.2d, 0.2d))
                     .deadlineWith(commander.keepArmAt(KeepArmAt.FarConeNode, KeepArmAt.FarConeNodeFf)))
-            .withTimeout(4d)
+            .withTimeout(3.5d)
             .andThen(new WaitCommand(0.3d)
                 .deadlineWith(
                     commander.openClaw(),
@@ -74,8 +74,25 @@ public final class Autos {
                         .andThen(
                             commander.dropArm()
                                 .deadlineWith(commander.driveTo(5d, 0d, 90d, 0.6d, 0.5d)))),
-                commander.driveTo(85d, 0d, 90d, 0.25d, 0.5d),
-                commander.driveTo(42d, 0d, 90d, 0.3d, 0.5d),
+                commander.driveTo(90d, 0d, 90d, 0.32d, 0.5d),
+                commander.driveTo(42d, 0d, 90d, 0.32d, 0.5d),
+                commander.level());
+    }
+
+    public static CommandBase scoreLevelCenter(RobotCommander commander) {
+        return score(commander)
+            .andThen(
+                commander.moveShoulder(MoveShoulder.Position.RETRACTED)
+                    .alongWith(
+                        commander.closeClaw(),
+                        new WaitCommand(0.3d)
+                            .deadlineWith(
+                                commander.keepArmAt(KeepArmAt.FarConeNode, KeepArmAt.NoConeFf),
+                                commander.driveTo(5d, 0d, 180d, 0.6d, 0.5d))
+                            .andThen(
+                                commander.dropArm()
+                                    .deadlineWith(commander.driveTo(5d, 0d, 90d, 0.6d, 0.5d)))),
+                commander.driveTo(52d, 0d, 90d, 0.3d, 0.5d),
                 commander.level());
     }
 

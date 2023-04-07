@@ -21,7 +21,7 @@ public class DriveTo extends CommandBase {
         this.target = target;
         this.swerveDrive = swerveDrive;
         linearPid = new PIDController(0.03d, 0.001d, 0d);
-        linearPid.setTolerance(0.5d);
+        linearPid.setTolerance(1d);
         angularPid = new PIDController(0.012d, 0d, 0d);
         angularPid.enableContinuousInput(0d, 360d);
         angularPid.setTolerance(5d);

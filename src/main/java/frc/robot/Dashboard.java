@@ -2,9 +2,9 @@ package frc.robot;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEvent;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
@@ -24,13 +24,13 @@ public final class Dashboard {
         throw new AssertionError("utility class");
     }
 
-    public static void createSwerveDriveLayout(String tabName, int column, int row, SwerveDrive swerveDrive) {
+    public static void createSwerveDriveConfigLayout(String tabName, int column, int row, SwerveDrive swerveDrive) {
         var inst = NetworkTableInstance.getDefault();
         var layout = Shuffleboard.getTab(tabName)
             .getLayout("Swerve Drive", BuiltInLayouts.kGrid)
             .withSize(2, 2)
             .withPosition(column, row)
-            .withProperties(Map.of("Label position", "LEFT", "Number of columns", 1, "Number of rows", 5));
+            .withProperties(Map.of("Label position", "LEFT", "Number of columns", 1, "Number of rows", 6));
 
         var autoCorrectEnabledEntry = layout
             .add("Auto Correct", SwerveDrive.DEFAULT_AUTO_CORRECT_ENABLED)
@@ -272,15 +272,16 @@ public final class Dashboard {
             .withPosition(0, 0);
         layout
             .addString("Position", () -> String.format("%.3f", arm.getPosition()))
-            .withPosition(0, 0);
+            .withPosition(0, 1);
     }
 
     public static void createAutonomousLayout(String tabName, int column, int row, RobotContainer container) {
         var autonChooser = new SendableChooser<Integer>();
-        autonChooser.setDefaultOption("ScoreCrossLevelCenter", 0);
-        autonChooser.addOption("ScoreCrossLevelRight", 1);
-        autonChooser.addOption("ScoreCrossLevelLeft", 2);
-        autonChooser.addOption("Test", 3);
+        autonChooser.setDefaultOption("ScoreLevelCenter", 0);
+        autonChooser.addOption("ScoreCrossLevelCenter", 1);
+        autonChooser.addOption("ScoreCrossLevelRight", 2);
+        autonChooser.addOption("ScoreCrossLevelLeft", 3);
+        autonChooser.addOption("Test", 4);
         var tab = Shuffleboard.getTab(tabName);
         var layout = tab
             .getLayout("Robot", BuiltInLayouts.kGrid)
@@ -313,7 +314,7 @@ public final class Dashboard {
             .getLayout("Claw", BuiltInLayouts.kGrid)
             .withSize(2, 1)
             .withPosition(column, row)
-            .withProperties(Map.of("Label position", "LEFT", "Number of columns", 1, "Number of rows", 1));
+            .withProperties(Map.of("Label position", "LEFT", "Number of columns", 1, "Number of rows", 2));
 
         layout
             .addString("State", () -> claw.isOpen() ? "Open" : "Closed")
@@ -321,7 +322,27 @@ public final class Dashboard {
 
         layout
             .addString("Detects", () -> claw.isDetecting() ? "Detecting" : "Not detecting")
+            .withPosition(0, 1);
+
+    }
+
+    public static void createMatchInfoLayout(String tabName, int column, int row) {
+        var layout = Shuffleboard.getTab(tabName)
+            .getLayout("Match Info", BuiltInLayouts.kGrid)
+            .withSize(2, 1)
+            .withPosition(column, row)
+            .withProperties(Map.of("Label position", "LEFT", "Number of columns", 1, "Number of rows", 2));
+
+        layout
+            .addString("Match Mode", () -> DriverStation.isAutonomous() ? "Autonomous"
+                : DriverStation.isTeleop() ? "Teleop"
+                : DriverStation.isTest() ? "Test"
+                : "Unknown")
             .withPosition(0, 0);
+
+        layout
+            .addString("Time Left", () -> String.format("%.0f", DriverStation.getMatchTime()))
+            .withPosition(0, 1);
 
     }
 }

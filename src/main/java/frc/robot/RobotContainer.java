@@ -5,7 +5,6 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.Compressor;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj2.command.*;
@@ -107,7 +106,7 @@ public class RobotContainer {
         // Shuffleboard config tab
 
         Dashboard.createSwerveModuleLayout(configTab, 0, 0, moduleFrontLeft, moduleFrontRight, moduleBackLeft, moduleBackRight);
-        Dashboard.createSwerveDriveLayout(configTab, 0, 2, swerveDrive);
+        Dashboard.createSwerveDriveConfigLayout(configTab, 0, 2, swerveDrive);
         Dashboard.createControllerLayout(configTab, 2, 0, () -> inputDevice, this);
 
         // Shuffleboard readings tab
@@ -120,6 +119,7 @@ public class RobotContainer {
         Dashboard.createArmLayout(readingsTab, 4, 0, arm);
         Dashboard.createAutonomousLayout(readingsTab, 6, 0, this);
         Dashboard.createClawLayout(readingsTab, 4, 1, claw);
+        Dashboard.createMatchInfoLayout(readingsTab, 6, 1);
 
         configureBindings();
     }
@@ -200,26 +200,40 @@ public class RobotContainer {
                     commander.dropArm()));
 
         inputDevice.setArmToStationPickup().onTrue(
-            commander.liftArmTo(KeepArmAt.Substation, KeepArmAt.NoConeFf)
-                .andThen(
-                    commander.keepArmAt(KeepArmAt.Substation, KeepArmAt.NoConeFf)
-                        .alongWith(
-                            new WaitCommand(0.5d)
-                                .deadlineWith(commander.openClaw())
-                                .andThen(
-                                    new WaitUntilCommand(claw::isDetecting),
-                                    commander.closeClaw()))));
+            new InstantCommand(() -> {
+                inputDevice.setMaxForwardSpeed(0.2d);
+                inputDevice.setMaxSidewaysSpeed(0.2d);
+                inputDevice.setMaxAngularSpeed(0.2d);
+            }).andThen(
+                commander.liftArmTo(KeepArmAt.Substation, KeepArmAt.NoConeFf),
+                commander.keepArmAt(KeepArmAt.Substation, KeepArmAt.NoConeFf)
+                    .alongWith(
+//                        commander.moveShoulder(MoveShoulder.Position.SUBSTATION),
+                        new WaitCommand(0.5d)
+                            .deadlineWith(commander.openClaw())
+                            .andThen(
+                                new WaitUntilCommand(claw::isDetecting),
+                                commander.closeClaw()))));
 
         inputDevice.setArmToStationPickup().onFalse(
-            new WaitCommand(0.3d)
-                .deadlineWith(commander.closeClaw())
-                .andThen(commander.keepArmAt(KeepArmAt.AboveFloor, 0.15d, KeepArmAt.ConeGroundFf)));
+            new WaitCommand(1d)
+                .deadlineWith(
+                    commander.closeClaw(),
+                    commander.keepArmAt(KeepArmAt.Substation, KeepArmAt.NoConeFf),
+                    new InstantCommand(() -> {
+                        // Don't return to full speed if the slow trigger is being held
+                        if (!inputDevice.slow().getAsBoolean()) {
+                            inputDevice.setMaxSidewaysSpeed(1d);
+                            inputDevice.setMaxForwardSpeed(1d);
+                            inputDevice.setMaxAngularSpeed(1d);
+                        }
+                    }))
+                .andThen(commander.keepArmAt(KeepArmAt.AboveFloor, 0.1d, KeepArmAt.ConeGroundFf)));
+
 
         inputDevice.turtle().onTrue(
-            commander.dropArm()
-                .alongWith(commander.moveShoulder(MoveShoulder.Position.RETRACTED))
-                .andThen(commander.resetShoulder()
-                ));
+            commander.stopArm()
+                .alongWith(commander.moveShoulder(MoveShoulder.Position.RETRACTED)));
 
         inputDevice.slow().whileTrue(new StartEndCommand(
             () -> {
@@ -228,13 +242,16 @@ public class RobotContainer {
                 inputDevice.setMaxAngularSpeed(0.2d);
             },
             () -> {
-                inputDevice.setMaxSidewaysSpeed(1d);
-                inputDevice.setMaxForwardSpeed(1d);
-                inputDevice.setMaxAngularSpeed(1d);
+                // Don't return to full speed if the robot is currently trying to pickup at the substation
+                if (!inputDevice.setArmToStationPickup().getAsBoolean()) {
+                    inputDevice.setMaxSidewaysSpeed(1d);
+                    inputDevice.setMaxForwardSpeed(1d);
+                    inputDevice.setMaxAngularSpeed(1d);
+                }
             }));
 
-        inputDevice.test1().onTrue(new InstantCommand(() -> arm.set(arm.getPower() + 0.01d)));
-        inputDevice.test2().onTrue(new InstantCommand(() -> arm.set(arm.getPower() - 0.01d)));
+//        inputDevice.test1().onTrue(new InstantCommand(() -> arm.set(arm.getPower() + 0.01d)));
+//        inputDevice.test2().onTrue(new InstantCommand(() -> arm.set(arm.getPower() - 0.01d)));
 
         swerveDrive.setDefaultCommand(
             new RunCommand(() -> swerveDrive.drive(
@@ -251,10 +268,11 @@ public class RobotContainer {
      */
     public Command getAutonomousCommand() {
         var commander = new RobotCommander(swerveDrive, shoulder, arm, claw);
-        var auton = autonId == 0 ? Autos.scoreCrossLevelCenter(commander)
-            : autonId == 1 ? Autos.scoreCrossLevelRight(commander)
-            : autonId == 2 ? Autos.scoreCrossLevelLeft(commander)
-            : autonId == 3 ? Autos.test(commander)
+        var auton = autonId == 0 ? Autos.scoreLevelCenter(commander)
+            : autonId == 1 ? Autos.scoreCrossLevelCenter(commander)
+            : autonId == 2 ? Autos.scoreCrossLevelRight(commander)
+            : autonId == 3 ? Autos.scoreCrossLevelLeft(commander)
+            : autonId == 4 ? Autos.test(commander)
             : Autos.scoreCrossLevelCenter(commander);
         return auton.withTimeout(14.8d).andThen(new RunCommand(() -> swerveDrive.drive(0d, 0d, 0d)));
     }

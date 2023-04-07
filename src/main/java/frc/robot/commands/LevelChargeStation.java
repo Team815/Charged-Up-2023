@@ -25,7 +25,7 @@ public class LevelChargeStation extends CommandBase {
     @Override
     public void execute() {
         final var threshold = 4d;
-        final var maxVariance = 0.2d;
+        final var maxVariance = 0.4d;
         var level = swerveDrive.getAngles().getRoll();
         if (levels.isFull()) {
             var range = levels.range();

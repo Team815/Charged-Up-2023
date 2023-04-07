@@ -2,6 +2,7 @@ package frc.robot.commands;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Claw;
@@ -41,11 +42,11 @@ public class RobotCommander {
     }
 
     public InstantCommand resetPose() {
-        return new InstantCommand(swerveDrive::resetPose);
+        return new InstantCommand(swerveDrive::resetPose, swerveDrive);
     }
 
     public InstantCommand resetGyro(double offset) {
-        return new InstantCommand(() -> swerveDrive.resetGyro(offset));
+        return new InstantCommand(() -> swerveDrive.resetGyro(offset), swerveDrive);
     }
 
     // Shoulder Commands
@@ -53,7 +54,7 @@ public class RobotCommander {
     public MoveShoulder moveShoulder(MoveShoulder.Position target) {
         return new MoveShoulder(shoulder, target);
     }
-    public InstantCommand resetShoulder() { return new InstantCommand(shoulder::resetPosition); }
+    public InstantCommand resetShoulder() { return new InstantCommand(shoulder::resetPosition, shoulder); }
 
     // Arm Commands
 
@@ -77,13 +78,21 @@ public class RobotCommander {
         return new DropArm(arm);
     }
 
+    public CommandBase stopArm() {
+        return new InstantCommand(() -> arm.set(0), arm);
+    }
+
+    public CommandBase resetArm() {
+        return new InstantCommand(arm::reset, arm);
+    }
+
     // Claw Commands
 
     public InstantCommand openClaw() {
-        return new InstantCommand(claw::open);
+        return new InstantCommand(claw::open, claw);
     }
 
     public InstantCommand closeClaw() {
-        return new InstantCommand(claw::close);
+        return new InstantCommand(claw::close, claw);
     }
 }

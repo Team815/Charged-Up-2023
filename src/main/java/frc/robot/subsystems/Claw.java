@@ -29,6 +29,7 @@ public class Claw extends SubsystemBase {
     }
 
     public void close() {
+        System.out.println("Closing claw");
         solenoid.set(false);
     }
 
@@ -43,7 +44,7 @@ public class Claw extends SubsystemBase {
 
     private boolean isDetectingPrivate() {
         final int minRange = 60;
-        final int maxRange = 280;
+        final int maxRange = 180;
         int reading = detector.detect().orElse(-1);
         return reading >= minRange && reading <= maxRange;
     }

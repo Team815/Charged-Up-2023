@@ -12,12 +12,12 @@ public class KeepArmAt extends CommandBase {
     private final double maxSpeed;
     private final double feedForward;
 
-    public static final double FarConeNode = Arm.RETRACTED - 0.235d;
-    public static final double NearConeNode = Arm.RETRACTED - 0.195d;
-    public static final double Substation = Arm.RETRACTED - 0.19d;
+    public static final double FarConeNode = Arm.RETRACTED - 0.236d;
+    public static final double NearConeNode = Arm.RETRACTED - 0.20d;
+    public static final double Substation = Arm.RETRACTED - 0.195d;
     public static final double AboveFloor = Arm.RETRACTED - 0.01d;
     public static final double NoConeFf = 0.06d;
-    public static final double FarConeNodeFf = 0.07d;
+    public static final double FarConeNodeFf = 0.075d;
     public static final double NearConeNodeFf = 0.08d;
     public static final double ConeGroundFf = 0.05d;
 

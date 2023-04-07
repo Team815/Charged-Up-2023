@@ -12,12 +12,14 @@ public class MoveShoulder extends CommandBase {
     private static final double NEAR_CONE_OFFSET = 0d;
     private static final double FAR_CONE_OFFSET = -4.5d;
     private static final double SUBSTATION_OFFSET = -3.5d;
+    private static final double PICKUP_OFFSET = -3.5d;
 
     public enum Position {
         RETRACTED(0d),
+        SUBSTATION(SUBSTATION_OFFSET),
         NEAR_CONE(NEAR_CONE_OFFSET),
         FAR_CONE(FAR_CONE_OFFSET),
-        PICKUP(SUBSTATION_OFFSET);
+        PICKUP(PICKUP_OFFSET);
 
         private final double offset;
 
