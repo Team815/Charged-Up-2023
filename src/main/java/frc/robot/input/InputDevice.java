@@ -15,25 +15,7 @@ public interface InputDevice {
 
     Trigger resetHeading();
 
-    Trigger cycleLimelightTarget();
-
-    Trigger centerOnTarget();
-
-    Trigger openClaw();
-
-    Trigger setArmToTopCone();
-
-    Trigger setArmToBottomCone();
-
-    Trigger setArmToStationPickup();
-
-    Trigger turtle();
-
     Trigger slow();
-
-    Trigger test1();
-
-    Trigger test2();
 
     void setMaxSidewaysSpeed(double maxSidewaysSpeed);
 

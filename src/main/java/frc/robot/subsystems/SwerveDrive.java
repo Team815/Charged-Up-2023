@@ -17,7 +17,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.util.Arrays;
 
 public class SwerveDrive extends SubsystemBase {
-    private ChassisSpeeds speeds;
+    private ChassisSpeeds speeds = new ChassisSpeeds();
     private final Pigeon2 gyro;
     private final SwerveModule[] modules;
     private final SwerveDriveKinematics kinematics;
@@ -51,13 +51,9 @@ public class SwerveDrive extends SubsystemBase {
     }
 
     public void drive(double forwardVelocity, double sidewaysVelocity, double angularVelocity) {
-        speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-            forwardVelocity,
-            sidewaysVelocity,
-            angularVelocity,
-            Rotation2d.fromDegrees(gyro.getYaw()));
-
-        var states = kinematics.toSwerveModuleStates(speeds);
+        speeds = new ChassisSpeeds(forwardVelocity, sidewaysVelocity, angularVelocity);
+        var robotSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, Rotation2d.fromDegrees(gyro.getYaw()));
+        var states = kinematics.toSwerveModuleStates(robotSpeeds);
 
         for (var i = 0; i < modules.length; i++) {
             modules[i].drive(states[i]);

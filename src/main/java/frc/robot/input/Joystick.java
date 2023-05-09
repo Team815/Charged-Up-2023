@@ -32,52 +32,7 @@ public class Joystick extends CommandJoystick implements InputDevice {
     }
 
     @Override
-    public Trigger cycleLimelightTarget() {
-        return button(2);
-    }
-
-    @Override
-    public Trigger centerOnTarget() {
-        return button(1);
-    }
-
-    @Override
-    public Trigger openClaw() {
-        return null;
-    }
-
-    @Override
-    public Trigger setArmToTopCone() {
-        return povUp();
-    }
-
-    @Override
-    public Trigger setArmToBottomCone() {
-        return povDown();
-    }
-
-    @Override
-    public Trigger setArmToStationPickup() {
-        return povRight();
-    }
-
-    @Override
-    public Trigger turtle() {
-        return povLeft();
-    }
-
-    @Override
     public Trigger slow() {
-        return null;
-    }
-
-    @Override
-    public Trigger test1() {
-        return null;
-    }
-
-    @Override
-    public Trigger test2() {
         return null;
     }
 

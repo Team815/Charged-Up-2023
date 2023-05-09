@@ -35,53 +35,8 @@ public class XboxController extends CommandXboxController implements InputDevice
     }
 
     @Override
-    public Trigger cycleLimelightTarget() {
-        return rightBumper();
-    }
-
-    @Override
-    public Trigger centerOnTarget() {
-        return leftBumper();
-    }
-
-    @Override
-    public Trigger openClaw() {
-        return a();
-    }
-
-    @Override
-    public Trigger setArmToTopCone() {
-        return y();
-    }
-
-    @Override
-    public Trigger setArmToBottomCone() {
-        return b();
-    }
-
-    @Override
-    public Trigger setArmToStationPickup() {
-        return x();
-    }
-
-    @Override
-    public Trigger turtle() {
-        return povDown();
-    }
-
-    @Override
     public Trigger slow() {
         return this.leftTrigger();
-    }
-
-    @Override
-    public Trigger test1() {
-        return povLeft();
-    }
-
-    @Override
-    public Trigger test2() {
-        return povRight();
     }
 
     @Override

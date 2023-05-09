@@ -1,9 +1,9 @@
 package frc.robot.subsystems;
 
 public class GyroAngles {
-    private double pitch;
-    private double roll;
-    private double yaw;
+    private final double pitch;
+    private final double roll;
+    private final double yaw;
 
     public GyroAngles(double pitch, double roll, double yaw) {
         this.pitch = pitch;
