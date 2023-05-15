@@ -8,7 +8,7 @@ import com.ctre.phoenix.sensors.Pigeon2;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
-import frc.robot.commands.RobotCommander;
+import frc.robot.commands.Commander;
 import frc.robot.input.InputDevice;
 import frc.robot.input.XboxController;
 import frc.robot.subsystems.SwerveDrive;
@@ -86,7 +86,7 @@ public class RobotContainer {
     }
 
     private void configureBindings() {
-        var commander = new RobotCommander(swerveDrive);
+        var commander = new Commander(swerveDrive);
 
         inputDevice.resetHeading().onTrue(commander.resetGyro(0));
 
@@ -101,6 +101,8 @@ public class RobotContainer {
                 inputDevice.setMaxForwardSpeed(1d);
                 inputDevice.setMaxAngularSpeed(1d);
             }));
+
+        inputDevice.driveTo().onTrue(commander.driveTo(20, -10, 0));
 
         swerveDrive.setDefaultCommand(commander.accelerationDrive(
             () -> inputDevice.getForwardVelocity(),

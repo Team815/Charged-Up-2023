@@ -36,7 +36,12 @@ public class XboxController extends CommandXboxController implements InputDevice
 
     @Override
     public Trigger slow() {
-        return this.leftTrigger();
+        return leftTrigger();
+    }
+
+    @Override
+    public Trigger driveTo() {
+        return a();
     }
 
     @Override
